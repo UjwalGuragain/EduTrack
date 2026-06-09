@@ -1,0 +1,38 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Add Course</title>
+</head>
+<body>
+  <h1>Add Course</h1>
+
+  <form method="post" action="{% url 'course_add' %}">
+    {% csrf_token %}
+
+    <div>
+      <label for="id_course_name">Course Name:</label>
+      <input id="id_course_name" type="text" name="course_name" required />
+    </div>
+
+    <div>
+      <label for="id_course_duration">Course Duration:</label>
+      <select id="id_course_duration" name="course_duration" required>
+        <option value="1">1 Year</option>
+        <option value="2">2 Years</option>
+        <option value="3">3 Years</option>
+        <option value="4">4 Years</option>
+        <option value="5">5 years</option>
+      </select>
+    </div>
+
+    <div style="margin-top: 12px;">
+      <button type="submit">Create</button>
+      <a href="{% url 'course_list' %}">Cancel</a>
+    </div>
+  </form>
+</body>
+</html>
+
