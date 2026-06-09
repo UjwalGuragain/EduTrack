@@ -1,0 +1,46 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Courses</title>
+</head>
+<body>
+  <h1>Courses</h1>
+
+  <p>
+    <a href="{% url 'course_add' %}">Add New Course</a>
+  </p>
+
+  {% if courses and courses|length > 0 %}
+    <table border="1" cellpadding="8" cellspacing="0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Course Name</th>
+          <th>Duration</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for course in courses %}
+          <tr>
+            <td>{{ course.id }}</td>
+            <td>{{ course.course_name }}</td>
+            <td>{{ course.get_course_duration_display|default:course.course_duration }}</td>
+            <td>
+              <a href="{% url 'course_update' course.id %}">Edit</a>
+              |
+              <a href="{% url 'course_delete' course.id %}" onclick="return confirm('Delete this course?');">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No courses found.</p>
+  {% endif %}
+</body>
+</html>
+
