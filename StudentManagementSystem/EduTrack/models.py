@@ -27,3 +27,30 @@ class Student(models.Model):
     def __str__(self):
         return self.full_name
     
+class Module(models.Model):
+    module_name = models.CharField(max_length=100)
+    full_marks = models.DecimalField(max_digits=5, decimal_places=2)
+    courses = models.ForeignKey(Course, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.module_name
+
+class Result(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
+    obtained_marks = models.DecimalField(max_digits=5, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.student} - {self.module}"
+
+class Attendance(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    date = models.DateField()
+    STATUS_CHOICES = [
+        ("Present", "Present"),
+        ("Absent", "Absent")
+    ]
+    status = models.CharField(max_length=10, choices = STATUS_CHOICES)
+
+    def __str__(self):
+        return f"{self.student} - {self.date}"
