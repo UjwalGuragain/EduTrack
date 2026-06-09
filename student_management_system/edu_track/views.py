@@ -4,7 +4,7 @@ from .models import Course, Module, Student, Result, Attendance
 #Fetch all courses from Database and Send it to template
 def list_courses(request):
     courses = Course.objects.all()
-    return render(request, "course_list.html", {"courses": courses})
+    return render(request, "edu_track/courses/course_list.html", {"courses": courses})
 
 #Add new courses
 def course_add(request):
@@ -18,7 +18,7 @@ def course_add(request):
         )
         return redirect("course_list")
 
-    return render(request, "course_add.html")
+    return render(request, "edu_track/courses/course_add.html")
 
 #Update courses
 def course_update(request, id):
@@ -30,7 +30,7 @@ def course_update(request, id):
         course.save()
         return redirect("course_list")
 
-    return render(request, "course_update.html", {"course": course})
+    return render(request, "edu_track/courses/course_update.html", {"course": course})
 
 #Delete courses
 def course_delete(request, id):
