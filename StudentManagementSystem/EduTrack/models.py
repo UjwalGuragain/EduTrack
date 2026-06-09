@@ -15,12 +15,12 @@ class Course(models.Model):
         return self.course_name
 
 class Student(models.Model):
-    student_id = models.CharField(max_length=20, unique=True)
     full_name = models.CharField(max_length=100)
     address = models.CharField(max_length=100)
     contact_number = models.CharField(max_length=10)
     email = models.EmailField()
     guardian_name = models.CharField(max_length=100)
+    enrollment_number = models.CharField(max_length=20, unique=True)
     enrolled_course = models.ForeignKey(Course, on_delete=models.CASCADE)
     enrollment_date = models.DateField()
 
