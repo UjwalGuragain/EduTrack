@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('module_name', models.CharField(max_length=100)),
                 ('full_marks', models.DecimalField(decimal_places=2, max_digits=5)),
-                ('courses', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='EduTrack.course')),
+                ('courses', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='edu_track.course')),
             ],
         ),
         migrations.CreateModel(
@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                 ('email', models.EmailField(max_length=254)),
                 ('guardian_name', models.CharField(max_length=100)),
                 ('enrollment_date', models.DateField()),
-                ('enrolled_course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='EduTrack.course')),
+                ('enrolled_course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='edu_track.course')),
             ],
         ),
         migrations.CreateModel(
@@ -48,8 +48,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('obtained_marks', models.DecimalField(decimal_places=2, max_digits=5)),
-                ('module', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='EduTrack.module')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='EduTrack.student')),
+                ('module', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='edu_track.module')),
+                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='edu_track.student')),
             ],
         ),
         migrations.CreateModel(
@@ -58,7 +58,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date', models.DateField()),
                 ('status', models.CharField(choices=[('Present', 'Present'), ('Absent', 'Absent')], max_length=10)),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='EduTrack.student')),
+                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='edu_track.student')),
             ],
         ),
     ]
