@@ -1,0 +1,47 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Modules</title>
+</head>
+<body>
+  <h1>Modules</h1>
+
+  <p>
+    <a href="{% url 'module_add' %}">Add New Module</a>
+  </p>
+
+  {% if modules and modules|length > 0 %}
+    <table border="1" cellpadding="8" cellspacing="0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Module Name</th>
+          <th>Full Marks</th>
+          <th>Course</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for module in modules %}
+          <tr>
+            <td>{{ module.id }}</td>
+            <td>{{ module.module_name }}</td>
+            <td>{{ module.full_marks }}</td>
+            <td>{{ module.courses.course_name }}</td>
+            <td>
+              <a href="{% url 'module_update' module.id %}">Edit</a>
+              |
+              <a href="{% url 'module_delete' module.id %}" onclick="return confirm('Delete this module?');">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No modules found.</p>
+  {% endif %}
+</body>
+</html>
