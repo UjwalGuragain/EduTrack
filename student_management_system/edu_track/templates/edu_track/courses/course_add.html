@@ -20,11 +20,9 @@
     <div>
       <label for="id_course_duration">Course Duration:</label>
       <select id="id_course_duration" name="course_duration" required>
-        <option value="1">1 Year</option>
-        <option value="2">2 Years</option>
-        <option value="3">3 Years</option>
-        <option value="4">4 Years</option>
-        <option value="5">5 years</option>
+        {% for value,label in duration_choices %}
+          <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
       </select>
     </div>
 
