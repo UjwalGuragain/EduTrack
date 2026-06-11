@@ -100,3 +100,46 @@ def student_delete(request, id):
     student = Student.objects.get(id=id)
     student.delete()
     return redirect("student_list")
+
+#CRUD OPERATIONS FOR MODULE
+#Fetch all modules from Database and Sent it to template
+def list_modules(request):
+    module = Module.objects.all()
+    return render(request, "edu_track/modules/module_list.html", {"modules" : module})
+
+#Add modules
+def module_add(request):
+    course = Course.objects.all()
+    if request.method == "POST":
+        module_name = request.POST.get("module_name")
+        full_marks = request.POST.get("full_marks")
+        courses = Course.objects.get(id = request.POST.get("courses"))
+
+        Module.objects.create(
+            module_name = module_name,
+            full_marks = full_marks,
+            courses = courses
+        )
+
+        return redirect("module_list")
+    return render(request,"edu_track/modules/module_add.html", {"courses" : course} )
+
+#Update modules
+def module_update(request, id):
+    module = Module.objects.get(id = id)
+    course = Course.objects.all()
+
+    if request.method == "POST":
+        module.module_name = request.POST.get("module_name")
+        module.full_marks = request.POST.get("full_marks")
+        module.courses = Course.objects.get(id=request.POST.get("courses"))
+        module.save()
+        return redirect("module_list")
+    
+    return render(request, "edu_track/modules/module_update.html", {"module" : module, "courses" : course})
+
+#Delete modules
+def module_delete(request, id):
+    module = Module.objects.get(id = id)
+    module.delete()
+    return redirect("module_list")
