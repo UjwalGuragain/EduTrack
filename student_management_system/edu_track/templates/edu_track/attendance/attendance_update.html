@@ -1,0 +1,59 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Update Attendance</title>
+</head>
+<body>
+  <h1>Update Attendance</h1>
+
+  <p>
+    <a href="{% url 'attendance_list' %}">Back to Attendance</a>
+  </p>
+
+  <form method="post" action="">
+    {% csrf_token %}
+
+    <div>
+      <label for="student">Student:</label>
+      <select name="student" id="student" required>
+        {% for s in student %}
+          <option value="{{ s.id }}" {% if attendance and attendance.student.id == s.id %}selected{% endif %}>
+            {{ s.full_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="date">Date:</label>
+      <input type="date" name="date" id="date" value="{{ attendance.date }}" required />
+    </div>
+
+    <div>
+      <label for="status">Status:</label>
+      <select name="status" id="status" required>
+        {% if attendance %}
+          {% for value,label in attendance.STATUS_CHOICES %}
+          {% endfor %}
+        {% endif %}
+
+        {# Fallback: if status_choices not provided by view #}
+        {% if status_choices %}
+          {% for value,label in status_choices %}
+            <option value="{{ value }}" {% if attendance and attendance.status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        {% else %}
+          <option value="Present" {% if attendance and attendance.status == 'Present' %}selected{% endif %}>Present</option>
+          <option value="Absent" {% if attendance and attendance.status == 'Absent' %}selected{% endif %}>Absent</option>
+        {% endif %}
+      </select>
+    </div>
+
+    <button type="submit">Update</button>
+  </form>
+</body>
+</html>
+
