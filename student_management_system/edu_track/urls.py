@@ -22,4 +22,8 @@ path("result/add/", views.result_add, name = "result_add"),
 path("result/update/<int:id>/", views.result_update, name = "result_update"),
 path("result/delete/<int:id>/", views.result_delete, name = "result_delete"),
 
+path("attendance/", views.list_attendance, name = "attendance_list"),
+path("attendance/add/", views.attendance_add, name = "attendance_add"),
+path("attendance/update/<int:id>/", views.attendance_update, name = "attendance_update"),
+path("attendance/delete/<int:id>/", views.attendance_delete, name = "attendance_delete")
 ]
