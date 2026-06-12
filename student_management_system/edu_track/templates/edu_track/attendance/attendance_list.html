@@ -1,0 +1,50 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Attendance</title>
+</head>
+<body>
+  <h1>Attendance</h1>
+
+  <p>
+    <a href="{% url 'attendance_add' %}">Add New Attendance</a>
+  </p>
+
+  {% if attendance and attendance|length > 0 %}
+    <table border="1" cellpadding="8" cellspacing="0">
+
+
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Student</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in attendance %}
+          <tr>
+            <td>{{ a.id }}</td>
+            <td>{{ a.student.full_name }}</td>
+            <td>{{ a.date }}</td>
+            <td>{{ a.status }}</td>
+            <td>
+              <a href="{% url 'attendance_update' a.id %}">Edit</a>
+              |
+              <a href="{% url 'attendance_delete' a.id %}" onclick="return confirm('Delete this attendance?');">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No attendance records found.</p>
+  {% endif %}
+</body>
+</html>
+
