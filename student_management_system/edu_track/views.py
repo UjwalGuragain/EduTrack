@@ -52,13 +52,13 @@ def student_add(request):
     courses = Course.objects.all()
 
     if request.method == "POST":
-            full_name=request.POST.get("full_name"),
-            address=request.POST.get("address"),
-            contact_number=request.POST.get("contact_number"),
-            email=request.POST.get("email"),
-            guardian_name=request.POST.get("guardian_name"),
-            enrollment_number=request.POST.get("enrollment_number"),
-            enrolled_course=Course.objects.get(id=request.POST.get("enrolled_course")),
+            full_name=request.POST.get("full_name")
+            address=request.POST.get("address")
+            contact_number=request.POST.get("contact_number")
+            email=request.POST.get("email")
+            guardian_name=request.POST.get("guardian_name")
+            enrollment_number=request.POST.get("enrollment_number")
+            enrolled_course=Course.objects.get(id=request.POST.get("enrolled_course"))
             enrollment_date=request.POST.get("enrollment_date")
         
             Student.objects.create(
@@ -188,3 +188,48 @@ def result_delete(request, id):
     result = Result.objects.get(id = id)
     result.delete()
     return redirect("result_list")
+
+#CRUD OPERATIONS FOR ATTENDANCE
+# Fetch all attendances from Database and Send it to template
+def list_attendance(request):
+    attendance = Attendance.objects.all()
+    return render(request, "edu_track/attendance/attendance_list.html", {"attendance" : attendance})
+
+#Add attendance
+def attendance_add(request):
+    student = Student.objects.all()
+
+    if request.method == "POST":
+        student = Student.objects.get(id = request.POST.get("student"))
+        date = request.POST.get("date")
+        status = request.POST.get("status")
+
+        Attendance.objects.create(
+            student = Student.objects.get(id = request.POST.get("student")),
+            date = date,
+            status = status
+        )
+        return redirect("attendance_list")
+    status_choices = Attendance.STATUS_CHOICES
+    return render(request, "edu_track/attendance/attendance_add.html", {"student" : student, "status_choices" : status_choices})
+
+#Update attendance
+def attendance_update(request, id):
+    attendance = Attendance.objects.get(id = id)
+    student = Student.objects.all()
+
+    if request.method == "POST":
+        attendance.student = Student.objects.get(id = request.POST.get("student"))
+        attendance.date = request.POST.get("date")
+        attendance.status = request.POST.get("status")
+        attendance.save()
+        return redirect("attendance_list")
+    
+    status_duration = Attendance.STATUS_CHOICES
+    return render(request, "edu_track/attendance/attendance_update.html", {"student" : student, "attendance" : attendance})
+
+#Delete attendance
+def attendance_delete(request, id):
+    attendance = Attendance.objects.get(id = id)
+    attendance.delete()
+    return redirect("attendance_list")
