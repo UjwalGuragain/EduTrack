@@ -17,4 +17,9 @@ path("module/add/", views.module_add, name = "module_add"),
 path("module/update/<int:id>/", views.module_update, name = "module_update"),
 path("module/delete/<int:id>/", views.module_delete, name = "module_delete"),
 
+path("result/", views.list_result, name = "result_list"),
+path("result/add/", views.result_add, name = "result_add"),
+path("result/update/<int:id>/", views.result_update, name = "result_update"),
+path("result/delete/<int:id>/", views.result_delete, name = "result_delete"),
+
 ]
