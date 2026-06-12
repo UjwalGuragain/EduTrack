@@ -1,0 +1,46 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Add Attendance</title>
+</head>
+<body>
+  <h1>Add Attendance</h1>
+
+  <p>
+    <a href="{% url 'attendance_list' %}">Back to Attendance</a>
+  </p>
+
+  <form method="post" action="">
+    {% csrf_token %}
+
+    <div>
+      <label for="student">Student:</label>
+      <select name="student" id="student" required>
+        {% for s in student %}
+          <option value="{{ s.id }}">{{ s.full_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="date">Date:</label>
+      <input type="date" name="date" id="date" required />
+    </div>
+
+    <div>
+      <label for="status">Status:</label>
+      <select name="status" id="status" required>
+        {% for value,label in status_choices %}
+          <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="submit">Save</button>
+  </form>
+</body>
+</html>
+
