@@ -1,0 +1,42 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Update Module</title>
+</head>
+<body>
+  <h1>Update Module</h1>
+
+  <form method="post" action="{% url 'module_update' module.id %}">
+    {% csrf_token %}
+
+    <div>
+      <label for="id_module_name">Module Name:</label>
+      <input id="id_module_name" type="text" name="module_name" value="{{ module.module_name }}" required />
+    </div>
+
+    <div>
+      <label for="id_full_marks">Full Marks:</label>
+      <input id="id_full_marks" type="number" name="full_marks" step="0.01" value="{{ module.full_marks }}" required />
+    </div>
+
+    <div>
+      <label for="id_courses">Course:</label>
+      <select id="id_courses" name="courses" required>
+        {% for c in courses %}
+          <option value="{{ c.id }}" {% if module.courses.id == c.id %}selected{% endif %}>
+            {{ c.course_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="margin-top: 12px;">
+      <button type="submit">Save</button>
+      <a href="{% url 'module_list' %}">Cancel</a>
+    </div>
+  </form>
+</body>
+</html>
