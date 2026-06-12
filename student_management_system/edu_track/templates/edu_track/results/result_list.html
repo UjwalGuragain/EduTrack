@@ -1,0 +1,48 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Results</title>
+</head>
+<body>
+  <h1>Results</h1>
+
+  <p>
+    <a href="{% url 'result_add' %}">Add New Result</a>
+  </p>
+
+  {% if results and results|length > 0 %}
+    <table border="1" cellpadding="8" cellspacing="0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Student</th>
+          <th>Module</th>
+          <th>Obtained Marks</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for result in results %}
+          <tr>
+            <td>{{ result.id }}</td>
+            <td>{{ result.student.full_name }}</td>
+            <td>{{ result.module.module_name }}</td>
+            <td>{{ result.obtained_marks }}</td>
+            <td>
+              <a href="{% url 'result_update' result.id %}">Edit</a>
+              |
+              <a href="{% url 'result_delete' result.id %}" onclick="return confirm('Delete this result?');">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No results found.</p>
+  {% endif %}
+</body>
+</html>
+
