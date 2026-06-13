@@ -1,66 +1,66 @@
-{% load static %}
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Add Student</title>
-</head>
-<body>
-  <h1>Add Student</h1>
+{% extends 'base.html' %}
+{% block content %}
+
+<div class = "card">
+  <div class = "card-header">
+    <h1 class = "card-title">Add Student</h1>
+    <div class = "card-tools">
+      <a href="{% url 'student_list' %}" class="btn btn-secondary">Back to Students</a>
+    </div>
+  </div>
 
   <form method="post" action="{% url 'student_add' %}">
     {% csrf_token %}
-
-    <div>
+    <div class = "card-body">
+    <div class = "form-group">
       <label for="id_full_name">Full Name:</label>
-      <input id="id_full_name" type="text" name="full_name" required />
+      <input id="id_full_name" type="text" name="full_name" class="form-control" required />
     </div>
 
-    <div>
+    <div class = "form-group">
       <label for="id_address">Address:</label>
-      <input id="id_address" type="text" name="address" required />
+      <input id="id_address" type="text" name="address" class="form-control" required />
     </div>
 
-    <div>
+    <div class = "form-group">
       <label for="id_contact_number">Contact Number:</label>
-      <input id="id_contact_number" type="text" name="contact_number" required maxlength="10" />
+      <input id="id_contact_number" type="text" name="contact_number" class="form-control" required maxlength="10" />
     </div>
 
-    <div>
+    <div class = "form-group">
       <label for="id_email">Email:</label>
-      <input id="id_email" type="email" name="email" required />
+      <input id="id_email" type="email" name="email" class="form-control" required />
     </div>
 
-    <div>
+    <div class = "form-group">
       <label for="id_guardian_name">Guardian Name:</label>
-      <input id="id_guardian_name" type="text" name="guardian_name" required />
+      <input id="id_guardian_name" type="text" name="guardian_name" class="form-control" required />
     </div>
 
-    <div>
+    <div class = "form-group">
       <label for="id_enrollment_number">Enrollment Number:</label>
-      <input id="id_enrollment_number" type="text" name="enrollment_number" required />
+      <input id="id_enrollment_number" type="text" name="enrollment_number" class="form-control" required />
     </div>
 
-    <div>
+    <div class = "form-group">
       <label for="id_enrolled_course">Enrolled Course:</label>
-      <select id="id_enrolled_course" name="enrolled_course" required>
+      <select id="id_enrolled_course" name="enrolled_course" class="form-control" required>
         {% for c in courses %}
           <option value="{{ c.id }}">{{ c.course_name }}</option>
         {% endfor %}
       </select>
     </div>
 
-    <div>
+    <div class = "form-group">
       <label for="id_enrollment_date">Enrollment Date:</label>
-      <input id="id_enrollment_date" type="date" name="enrollment_date" required />
+      <input id="id_enrollment_date" type="date" name="enrollment_date" class="form-control" required />
     </div>
 
-    <div style="margin-top: 12px;">
-      <button type="submit">Create</button>
-      <a href="{% url 'student_list' %}">Cancel</a>
+    <div class= "card-footer" style="margin-top: 12px;">
+      <button type="submit" class= "btn btn-primary">Create</button>
+      <a href="{% url 'student_list' %}" class="btn btn-secondary">Cancel</a>
+    </div>
     </div>
   </form>
-</body>
-</html>
-
+</div>
+{% endblock %}

@@ -1,40 +1,46 @@
-{% load static %}
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Add Module</title>
-</head>
-<body>
-  <h1>Add Module</h1>
+{% extends 'base.html' %}
+{% block content %}
+
+<div class = "card">
+  <div class = "card-header">
+    <h1 class = "card-title">Add Module</h1>
+    <div class= "card-tools">
+      <a href="{% url 'module_list' %}" class="btn btn-sm btn-secondary">Back to Modules</a>
+    </div>
+  </div>
 
   <form method="post" action="{% url 'module_add' %}">
     {% csrf_token %}
 
-    <div>
-      <label for="id_module_name">Module Name:</label>
-      <input id="id_module_name" type="text" name="module_name" required />
+    <div class = "card-body">
+
+      <div class = "form-group">
+        <label for="id_module_name">Module Name:</label>
+        <input id="id_module_name" type="text" name="module_name" class="form-control" required />
+      </div>
+
+      <div class = "form-group">
+        <label for="id_full_marks">Full Marks:</label>
+        <input id="id_full_marks" type="number" name="full_marks" class="form-control" step="0.01" required />
+      </div>
+
+      <div class = "form-group">
+        <label for="id_courses">Course:</label>
+        <select id="id_courses" name="courses" class="form-control" required>
+          {% for c in courses %}
+            <option value="{{ c.id }}">{{ c.course_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
     </div>
 
-    <div>
-      <label for="id_full_marks">Full Marks:</label>
-      <input id="id_full_marks" type="number" name="full_marks" step="0.01" required />
+    <div class = "card-footer">
+      <button type="submit" class="btn btn-primary">Create</button>
+      <a href="{% url 'module_list' %}" class="btn btn-secondary">Cancel</a>
     </div>
 
-    <div>
-      <label for="id_courses">Course:</label>
-      <select id="id_courses" name="courses" required>
-        {% for c in courses %}
-          <option value="{{ c.id }}">{{ c.course_name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div style="margin-top: 12px;">
-      <button type="submit">Create</button>
-      <a href="{% url 'module_list' %}">Cancel</a>
-    </div>
   </form>
-</body>
-</html>
+</div>
+
+{% endblock %}
