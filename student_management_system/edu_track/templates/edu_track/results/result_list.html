@@ -1,21 +1,16 @@
-{% load static %}
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Results</title>
-</head>
-<body>
-  <h1>Results</h1>
+{% extends 'base.html' %}
+{% block content %}
 
-  <p>
-    <a href="{% url 'result_add' %}">Add New Result</a>
-  </p>
-
+<div class = "card">
+  <div class = "card-header">
+    <h1 class = "card-title">Results</h1>
+    <div class= "card-tools">
+      <a href="{% url 'result_add' %}" class="btn btn-sm btn-secondary">Add New Result</a>
+    </div>
+  </div>
+  <div class = "card-body">
   {% if results and results|length > 0 %}
-    <table border="1" cellpadding="8" cellspacing="0">
-      <thead>
+    <table class = "table table-bordered table-striped">
         <tr>
           <th>ID</th>
           <th>Student</th>
@@ -23,8 +18,7 @@
           <th>Obtained Marks</th>
           <th>Actions</th>
         </tr>
-      </thead>
-      <tbody>
+
         {% for result in results %}
           <tr>
             <td>{{ result.id }}</td>
@@ -32,9 +26,9 @@
             <td>{{ result.module.module_name }}</td>
             <td>{{ result.obtained_marks }}</td>
             <td>
-              <a href="{% url 'result_update' result.id %}">Edit</a>
+              <a href="{% url 'result_update' result.id %}" class="btn btn-warning btn-sm">Edit</a>
               |
-              <a href="{% url 'result_delete' result.id %}" onclick="return confirm('Delete this result?');">Delete</a>
+              <a href="{% url 'result_delete' result.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this result?');">Delete</a>
             </td>
           </tr>
         {% endfor %}
@@ -43,6 +37,7 @@
   {% else %}
     <p>No results found.</p>
   {% endif %}
-</body>
-</html>
+  </div>
+</div>  
 
+{% endblock %}

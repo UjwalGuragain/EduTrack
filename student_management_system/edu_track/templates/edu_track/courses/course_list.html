@@ -1,38 +1,32 @@
-{% load static %}
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Courses</title>
-</head>
-<body>
-  <h1>Courses</h1>
+{% extends 'base.html' %}
+{% block content %}
 
-  <p>
-    <a href="{% url 'course_add' %}">Add New Course</a>
-  </p>
-
+<div class = "card">
+  <div class = "card-header">
+    <h1 class = "card-title">Courses</h1>
+    <div class= "card-tools">
+      <a href="{% url 'course_add' %}" class="btn btn-sm btn-secondary">Add New Course</a>
+    </div>
+  </div>
+  <div class = "card-body">
   {% if courses and courses|length > 0 %}
-    <table border="1" cellpadding="8" cellspacing="0">
-      <thead>
+    <table class = "table table-bordered table-striped">
         <tr>
           <th>ID</th>
           <th>Course Name</th>
           <th>Duration</th>
           <th>Actions</th>
         </tr>
-      </thead>
-      <tbody>
+
         {% for course in courses %}
           <tr>
             <td>{{ course.id }}</td>
             <td>{{ course.course_name }}</td>
             <td>{{ course.get_course_duration_display|default:course.course_duration }}</td>
             <td>
-              <a href="{% url 'course_update' course.id %}">Edit</a>
+              <a href="{% url 'course_update' course.id %}" class = "btn btn-warning btn-sm">Edit</a>
               |
-              <a href="{% url 'course_delete' course.id %}" onclick="return confirm('Delete this course?');">Delete</a>
+              <a href="{% url 'course_delete' course.id %}" class = "btn btn-danger btn-sm" onclick="return confirm('Delete this course?');">Delete</a>
             </td>
           </tr>
         {% endfor %}
@@ -41,6 +35,7 @@
   {% else %}
     <p>No courses found.</p>
   {% endif %}
-</body>
-</html>
+  </div>
+</div>
 
+{% endblock %}
