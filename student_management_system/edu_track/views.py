@@ -1,13 +1,25 @@
 from django.shortcuts import render, redirect
 from .models import Course, Module, Student, Result, Attendance
 
-#Render dashboard
-def dashboard(request):
+#RENDER INSTRUCTOR DASHBOARD
+def instructor_dashboard(request):
     context = {
+        "recent_students": Student.objects.order_by("-id")[:10],
         "student_count": Student.objects.count(),
         "course_count": Course.objects.count(),
+        "module_count": Module.objects.count(),
+        "result_count" : Result.objects.count(),
     }
-    return render(request, "dashboard.html", context)
+    return render(request, "edu_track/dashboards/instructor_dashboard.html", context)
+
+#RENDER STUDENT DASHBOARD
+def student_dashboard(request):
+    context = {
+        "student": Student.objects.all(),
+        "result": Result.objects.all(),
+        "attendance": Attendance.objects.all(),
+    }
+    return render(request, "edu_track/dashboards/student_dashboard.html", context)
 
 #CRUD OPERATIONS FOR COURSE
 #Fetch all courses from Database and Send it to template
