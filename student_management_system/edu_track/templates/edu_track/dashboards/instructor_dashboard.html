@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row">
+
+  <div class="col-lg-3">
+    <div class="small-box bg-info">
+      <div class="inner">
+        <h3>{{ student_count }}</h3>
+        <a href="{% url 'student_list' %}" class="btn btn-info">View Students</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3">
+    <div class="small-box bg-info">
+      <div class="inner">
+        <h3>{{ course_count }}</h3>
+        <a href="{% url 'course_list' %}" class="btn btn-info">View Courses</a>
+      </div>
+    </div>
+  </div>
+
+  <div class ="col-lg-3">
+    <div class="small-box bg-info">
+      <div class="inner">
+        <h3>{{ module_count }}</h3>
+        <a href="{% url 'module_list' %}" class="btn btn-info">View Modules</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class ="col-lg-3">
+    <div class="small-box bg-info">
+      <div class="inner">
+        <h3>{{ result_count }}</h3>
+        <a href="{% url 'result_list' %}" class="btn btn-info">View Results</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Recent Students</h3>
+  </div>
+  <div class="card-body">
+    {% if recent_students %}
+    <table class="table bordered table-striped">
+      <thead>
+        <tr>
+          <th>Enrollment Number</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Enrolled Course</th>
+          <th>Enrollment Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in recent_students %}
+        <tr>
+          <td>{{ student.enrollment_number }}</td>
+          <td>{{ student.full_name}}</td>
+          <td>{{ student.email }}</td>
+          <td>{{ student.enrolled_course }}</td>
+          <td>{{ student.enrollment_date }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+      <p>No recent students found.</p>
+  {% endif %}
+  </div>
+</div>
+{% endblock %}
