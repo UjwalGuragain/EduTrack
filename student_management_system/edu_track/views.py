@@ -1,9 +1,73 @@
 from django.shortcuts import render, redirect
-from .models import Course, Module, Student, Result, Attendance
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from .models import Course, Module, Student, Result, Attendance, Instructor
+
+#USER_LOGIN OPERATIONS
+def user_login(request):
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+        elif hasattr(user, "student"):
+            return redirect("instructor_dashboard")
+        elif hasattr(user, "instructor"):
+            return redirect("instructor_dashboard")
+        else:
+            messages.error(request, "Invalid credentials or Account not linked to Student or Instructor profile")
+            return redirect("login")
+
+    return render(request, "edu_track/registration/login.html")
+
+#USER_REGISTER OPERATIONS
+def user_register(request):
+    if request.method == "POST":
+        print(request.POST)
+        username = request.POST["username"]
+        email = request.POST["email"]
+        password = request.POST["password1"]
+        confirm_password = request.POST["password2"]
+
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match")
+            return redirect("register")
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists")
+            return redirect("register")
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
+        user.save()
+       
+        messages.success(request, "Account created successfully!")
+        return redirect("login")
+
+    return render(request, "edu_track/registration/register.html")
+
+#USER LOGOUT OPERATIONS
+def user_logout(request):
+    logout(request)
+    return redirect("login")
 
 #RENDER INSTRUCTOR DASHBOARD
+@login_required
 def instructor_dashboard(request):
+    if not hasattr(request.user,"instructor"):
+        return redirect("login")
+    
+    instructor = request.user.instructor
     context = {
+        instructor : instructor,
         "recent_students": Student.objects.order_by("-id")[:10],
         "student_count": Student.objects.count(),
         "course_count": Course.objects.count(),
@@ -13,9 +77,16 @@ def instructor_dashboard(request):
     return render(request, "edu_track/dashboards/instructor_dashboard.html", context)
 
 #RENDER STUDENT DASHBOARD
+@login_required
 def student_dashboard(request):
+    if not hasattr(request.user,"student"):
+        return redirect("login")
+    
+    student = request.user.student
     context = {
+        student: student,
         "student": Student.objects.all(),
+        "course": Course.objects.all(),
         "result": Result.objects.all(),
         "attendance": Attendance.objects.all(),
     }
@@ -69,9 +140,11 @@ def list_students(request):
 
 #Add new students
 def student_add(request):
+    users = User.objects.filter(student__isnull=True)
     courses = Course.objects.all()
 
     if request.method == "POST":
+            user = User.objects.get(id=request.POST.get("user"))
             full_name=request.POST.get("full_name")
             address=request.POST.get("address")
             contact_number=request.POST.get("contact_number")
@@ -82,6 +155,7 @@ def student_add(request):
             enrollment_date=request.POST.get("enrollment_date")
         
             Student.objects.create(
+                user = user,
                 full_name = full_name,
                 address = address,
                 contact_number = contact_number,
@@ -94,7 +168,7 @@ def student_add(request):
 
             return redirect("student_list")
 
-    return render(request, "edu_track/students/student_add.html", {"courses": courses})
+    return render(request, "edu_track/students/student_add.html", {"courses": courses, "users": users})
 
 #Update students
 def student_update(request, id):
