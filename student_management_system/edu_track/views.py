@@ -14,9 +14,9 @@ def user_login(request):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            login(request, user)
-        elif hasattr(user, "student"):
-            return redirect("instructor_dashboard")
+            login(request, user)  
+        if hasattr(user, "student"):
+            return redirect("student_dashboard")
         elif hasattr(user, "instructor"):
             return redirect("instructor_dashboard")
         else:
@@ -99,6 +99,7 @@ def list_courses(request):
     return render(request, "edu_track/courses/course_list.html", {"courses": courses})
 
 #Add new courses
+@login_required
 def course_add(request):
     if request.method == "POST":
         name = request.POST.get("course_name")
@@ -114,6 +115,7 @@ def course_add(request):
     return render(request,"edu_track/courses/course_add.html", {"duration_choices": duration_choices},)
 
 #Update courses
+@login_required
 def course_update(request, id):
     course = Course.objects.get(id=id)
 
@@ -127,6 +129,7 @@ def course_update(request, id):
     return render(request,"edu_track/courses/course_update.html",{"course": course, "duration_choices": duration_choices},)
 
 #Delete courses
+@login_required
 def course_delete(request, id):
     course = Course.objects.get(id=id)
     course.delete()
@@ -139,6 +142,7 @@ def list_students(request):
     return render(request, "edu_track/students/student_list.html", {"students": students})
 
 #Add new students
+@login_required
 def student_add(request):
     users = User.objects.filter(student__isnull=True)
     courses = Course.objects.all()
@@ -171,6 +175,7 @@ def student_add(request):
     return render(request, "edu_track/students/student_add.html", {"courses": courses, "users": users})
 
 #Update students
+@login_required
 def student_update(request, id):
     student = Student.objects.get(id=id)
     courses = Course.objects.all()
@@ -190,6 +195,7 @@ def student_update(request, id):
     return render(request, "edu_track/students/student_update.html",{"student": student, "courses": courses})
 
 #Delete students
+@login_required
 def student_delete(request, id):
     student = Student.objects.get(id=id)
     student.delete()
@@ -202,6 +208,7 @@ def list_modules(request):
     return render(request, "edu_track/modules/module_list.html", {"modules" : module})
 
 #Add modules
+@login_required
 def module_add(request):
     course = Course.objects.all()
     if request.method == "POST":
@@ -219,6 +226,7 @@ def module_add(request):
     return render(request,"edu_track/modules/module_add.html", {"courses" : course} )
 
 #Update modules
+@login_required
 def module_update(request, id):
     module = Module.objects.get(id = id)
     course = Course.objects.all()
@@ -233,6 +241,7 @@ def module_update(request, id):
     return render(request, "edu_track/modules/module_update.html", {"module" : module, "courses" : course})
 
 #Delete modules
+@login_required
 def module_delete(request, id):
     module = Module.objects.get(id = id)
     module.delete()
@@ -245,6 +254,7 @@ def list_result(request):
     return render(request, "edu_track/results/result_list.html", {"results" : result})
 
 #Add Results
+@login_required
 def result_add(request):
     student = Student.objects.all()
     module  = Module.objects.all()
@@ -264,19 +274,21 @@ def result_add(request):
     return render(request, "edu_track/results/result_add.html", {"student": student, "modules" : module})
 
 #Update Result
+@login_required
 def result_update(request, id):
     result = Result.objects.get(id = id)
     module = Module.objects.all()
     student = Student.objects.all()
     if request.method == "POST":
-        result.student = Module.objects.get(id = request.POST.get("module"))
-        result.module = Student.objects.get(id = request.POST.get("student"))
+        result.student = Student.objects.get(id = request.POST.get("student"))
+        result.module = Module.objects.get(id = request.POST.get("module"))
         result.obtained_marks = request.POST.get("obtained_marks")
         result.save()
         return redirect("result_list")
     return render(request, "edu_track/results/result_update.html", {"modules" : module, "students": student, "results" : result})
 
 #Delete Result
+@login_required
 def result_delete(request, id):
     result = Result.objects.get(id = id)
     result.delete()
@@ -289,6 +301,7 @@ def list_attendance(request):
     return render(request, "edu_track/attendance/attendance_list.html", {"attendance" : attendance})
 
 #Add attendance
+@login_required
 def attendance_add(request):
     student = Student.objects.all()
 
@@ -307,6 +320,7 @@ def attendance_add(request):
     return render(request, "edu_track/attendance/attendance_add.html", {"student" : student, "status_choices" : status_choices})
 
 #Update attendance
+@login_required
 def attendance_update(request, id):
     attendance = Attendance.objects.get(id = id)
     student = Student.objects.all()
@@ -322,6 +336,7 @@ def attendance_update(request, id):
     return render(request, "edu_track/attendance/attendance_update.html", {"student" : student, "attendance" : attendance})
 
 #Delete attendance
+@login_required
 def attendance_delete(request, id):
     attendance = Attendance.objects.get(id = id)
     attendance.delete()
