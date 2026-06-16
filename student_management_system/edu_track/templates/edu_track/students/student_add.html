@@ -12,6 +12,16 @@
   <form method="post" action="{% url 'student_add' %}">
     {% csrf_token %}
     <div class = "card-body">
+    <div class="form-group">  
+    <select name="user" class="form-control">
+    <option value="">Select User</option>
+    {% for user in users %}
+        <option value="{{ user.id }}">
+            {{ user.username }}
+        </option>
+    {% endfor %}
+    </select>
+
     <div class = "form-group">
       <label for="id_full_name">Full Name:</label>
       <input id="id_full_name" type="text" name="full_name" class="form-control" required />
