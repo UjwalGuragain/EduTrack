@@ -2,6 +2,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+
+path("", views.user_login, name = "login"),
 path("login/", views.user_login, name = "login"),
 path("register/", views.user_register, name = "register"),
 path("logout/", views.user_logout, name = "logout"),
@@ -13,12 +15,12 @@ path("student-dashboard/", views.student_dashboard, name = "student_dashboard"),
 path("course/", views.list_courses, name = "course_list"),
 path("course/add/", views.course_add, name = "course_add"),
 path("course/update/<int:id>/", views.course_update, name = "course_update"),
-path("course/delete/<int:id>", views.course_delete, name = "course_delete"),
+path("course/delete/<int:id>/", views.course_delete, name = "course_delete"),
 
 path("student/", views.list_students, name = "student_list"),
 path("student/add/", views.student_add, name = "student_add"),
 path("student/update/<int:id>/", views.student_update, name = "student_update"),
-path("student/delete/<int:id>", views.student_delete, name = "student_delete"),
+path("student/delete/<int:id>/", views.student_delete, name = "student_delete"),
 
 path("module/", views.list_modules, name = "module_list"),
 path("module/add/", views.module_add, name = "module_add"),
