@@ -2,7 +2,7 @@
 {% block content %}
 <div class="card">
     <div class="card-body">
-        <p>Welcome, {{ student.full_name }}!</p>
+        <p>Welcome, {{ request.user }}!</p>
         <p>This is your student dashboard where you can view your courses, attendance, and results.</p>
     </div>
     <h3 class="card-header">Your Course</h3>
@@ -56,7 +56,7 @@
         <p>No attendance records found.</p>
         {% endif %}
     </div>
-    <div class ="card-"body>
+    <div class ="card-body">
         <h3 class="card-header">Your Results</h3>
         {% if result %}
         <table class="table bordered table-striped">
