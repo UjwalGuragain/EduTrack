@@ -59,6 +59,15 @@ def user_logout(request):
     logout(request)
     return redirect("login")
 
+#PASSWORD RESET OPERATIONS
+def password_reset(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        if email == email:
+            messages.success(request, "Email sent successfully!")
+
+    return render(request, "edu_track/registration/password_reset.html")
+
 #RENDER INSTRUCTOR DASHBOARD
 @instructor_required
 def instructor_dashboard(request):
@@ -128,7 +137,6 @@ def course_add(request):
         return redirect("course_list")
 
     duration_choices = Course.DURATION_CHOICES
-    print(1)
     return render(request,"edu_track/courses/course_add.html", {"duration_choices": duration_choices},)
 
 #Update courses
