@@ -1,38 +1,76 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Register</h3>
-    </div>
-    <form method="post">
-        <div class="card-body">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="id_username">Username:</label>
-                <input type="text" name="username" class="form-control" id="id_username" required>
-            </div>
-            <div class="form-group">
-                <label for="id_email">Email:</label>
-                <input type="email" name="email" class="form-control" id="id_email" required>
-            </div>
+{% extends 'authbase.html' %}
 
-            <div class="form-group">
-                <label for="id_password1">Password:</label>
-                <input type="password" name="password1" class="form-control" id="id_password1" required>
-            </div>
-            <div class="form-group">
-                <label for="id_password2">Confirm Password:</label>
-                <input type="password" name="password2" class="form-control" id="id_password2" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Register</button>
+{% block content %}
+<div class="login-box">
+    <div class="card card-outline card-primary">
+        <div class="card-header text-center">
+            <a href="#" class="h1"><b>Edu</b>Track</a>
         </div>
-                    {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                    {% endfor %}
+
+        <div class="card-body">
+            <p class="login-box-msg">Create a new account</p>
+
+            <form method="post">
+                <div class="input-group mb-3">
+                    <input type="text" name="username" class="form-control" id="id_username" placeholder="Username" required>
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-user"></span>
+                        </div>
+                    </div>
                 </div>
-            {% endif %}
-    </form>
+
+                <div class="input-group mb-3">
+                    <input type="email" name="email" class="form-control" id="id_email" placeholder="Email" required>
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-envelope"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group mb-3">
+                    <input type="password" name="password1" class="form-control" id="id_password1" placeholder="Password" required>
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-lock"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group mb-3">
+                    <input type="password" name="password2" class="form-control" id="id_password2" placeholder="Confirm Password" required>
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-lock"></span>
+                        </div>
+                    </div>
+                </div>
+
+                {% csrf_token %}
+
+                {% if messages %}
+                    <div class="mb-3">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary btn-block">Register</button>
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-12 text-center">
+                        <a href="{% url 'login' %}">I already have an account</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
+
