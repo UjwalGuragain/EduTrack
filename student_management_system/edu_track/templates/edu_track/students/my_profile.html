@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between w-100">
+                    <h3 class="card-title mb-0">My Profile</h3>
+                    <div class="text-muted" style="font-size: 0.95rem;">
+                        <i class="fas fa-user mr-1"></i>
+                        {{ student.full_name }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-info elevation-1"><i class="fas fa-id-card"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Enrollment Number</span>
+                                <span class="info-box-number">{{ student.enrollment_number }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-success elevation-1"><i class="fas fa-book"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Course</span>
+                                <span class="info-box-number">{{ student.enrolled_course }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-calendar-alt"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Enrollment Date</span>
+                                <span class="info-box-number">{{ student.enrollment_date }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h5 class="mb-3"><i class="fas fa-list-alt mr-2"></i>Profile Summary</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped mb-0">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 220px;">Full Name</th>
+                                    <td>{{ student.full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Email</th>
+                                    <td>{{ student.email }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Contact Number</th>
+                                    <td>{{ student.contact_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Address</th>
+                                    <td style="white-space: normal;">{{ student.address }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Guardian Name</th>
+                                    <td>{{ student.guardian_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Enrollment Number</th>
+                                    <td>{{ student.enrollment_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Course</th>
+                                    <td>{{ student.enrolled_course }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Enrollment Date</th>
+                                    <td>{{ student.enrollment_date }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
