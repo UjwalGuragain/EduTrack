@@ -1,51 +1,96 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="card">
-    <div class="card-body">
-        <p>Welcome, {{ request.user }}!</p>
-        <p>This is your student dashboard where you can view your courses, attendance, and results.</p>
+<div class = "card">
+    <div class = "card-header">
+        <h3 class = "card-title">Welcome, {{ student.user }}!</h3></br>
+        <h3 class = "card-title">Course: {{ student.enrolled_course.course_name }}</h3></br>
+        <h3 class = "card-title">Enrollment Number: {{ student.enrollment_number }}</h3></br>
     </div>
-    <h3 class="card-header">Your Course</h3>
-    <div class="card-body">
-        {% if course %}
-        <table class="table bordered table-striped">
+</div>
+
+<div class= "row">
+    <div class = "col-lg-3 col-6">
+        <div class = "small-box bg-info">
+            <div class = "inner">
+                <p>Attendance Percentage</p>
+                <h3>{{ attendance_percentage }} %</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class = "col-lg-3 col-6">
+        <div class = "small-box bg-info">
+            <div class = "inner">
+                <p>Results Count</p>
+                <h3>{{ result_count }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class = "col-lg-3 col-6">
+        <div class = "small-box bg-info">
+            <div class = "inner">
+                <p> Present Days</p>
+                <h3>{{ present_count }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class = "col-lg-3 col-6">
+        <div class = "small-box bg-info">
+            <div class = "inner">
+                <p>Absent Days</p>
+                <h3>{{ absent_count }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class= "card">
+    <div class = "card-header">
+        <h3 class = "card-title">Your Course</h3>
+    </div>
+    <div class = "card-body">
+        {% if enrolled_course %}
+        <table class = "table bordered table-striped">
             <thead>
                 <tr>
                     <th>Course Name</th>
                     <th>Course Duration</th>
-                    <th>Enrolled Date</th>
+                    <th>Enrollment Date</th>
                 </tr>
             </thead>
             <tbody>
-                {% for course in student %}
+                {% for course in enrolled_course %}
                 <tr>
-                    <td>{{ course.enrolled_course.course_name }}</td>
-                    <td>{{ course.enrolled_course.course_duration }} Years</td>
-                    <td>{{ course.enrollment_date }}</td>
+                    <td>{{ course.course_name }}</td>
+                    <td>{{ course.course_duration }} Years</td>
+                    <td>{{ student.enrollment_date }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         {% else %}
-        <p>You are not enrolled in any courses yet.</p>
+        <p>No courses available.</p>
         {% endif %}
     </div>
-
-    <div class= "card-body">
-        <h3 class="card-header">Your Attendance</h3>
-        {% if attendance %}
-        <table class="table bordered table-striped">
+</div>
+<div class= "card">
+    <div class = "card-header">
+        <h3 class = "card-title">Recent Attendances</h3>
+    </div>
+    <div class = "card-body">
+        {% if recent_attendance %}
+        <table class = "table bordered table-striped">
             <thead>
                 <tr>
-                    <th>Student Name</th>
                     <th>Date</th>
                     <th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                {% for attendance in attendance %}
+                {% for attendance in recent_attendance %}
                 <tr>
-                    <td>{{ attendance.student }}</td>
                     <td>{{ attendance.date }}</td>
                     <td>{{ attendance.status }}</td>
                 </tr>
@@ -53,33 +98,35 @@
             </tbody>
         </table>
         {% else %}
-        <p>No attendance records found.</p>
+        <p>No attendance records available.</p>
         {% endif %}
     </div>
-    <div class ="card-body">
-        <h3 class="card-header">Your Results</h3>
-        {% if result %}
-        <table class="table bordered table-striped">
+</div>
+
+<div class= "card">
+    <div class = "card-header">
+        <h3 class = "card-title">Recent Results</h3>
+    </div>
+    <div class = "card-body">
+        {% if recent_result %}
+        <table class = "table bordered table-striped">
             <thead>
                 <tr>
-                    <th>Course Name</th>
-                    <th>Module Name</th>
-                    <th>Obtained Marks</th>
+                    <th>Module</th>
+                    <th>Score</th>
                 </tr>
             </thead>
             <tbody>
-                {% for result in result %}
+                {% for result in recent_result %}
                 <tr>
-                    <td>{{ result.student.enrolled_course }}</td>
-                    <td>{{ result.module }}</td>
+                    <td>{{ result.module.module_name }}</td>
                     <td>{{ result.obtained_marks }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         {% else %}
-        <p>No results found.</p>
+        <p>No results available.</p>
         {% endif %}
     </div>
-</div>
 {% endblock %}
