@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from .models import Course, Module, Student, Result, Attendance, Instructor
-from .decoraters import *
+from .decorators import *
 
 #USER_LOGIN OPERATIONS
 def user_login(request):
@@ -67,7 +67,7 @@ def instructor_dashboard(request):
     
     instructor = request.user.instructor
     context = {
-        instructor : instructor,
+        "instructor" : instructor,
         "recent_students": Student.objects.order_by("-id")[:10],
         "student_count": Student.objects.count(),
         "course_count": Course.objects.count(),
@@ -83,12 +83,27 @@ def student_dashboard(request):
         return redirect("login")
     
     student = request.user.student
+    course = Course.objects.filter(student=student)
+    result = Result.objects.filter(student=student).select_related("module")
+    result_count = Result.objects.filter(student=student).count()
+    attendance = Attendance.objects.filter(student=student).order_by("-date")
+    present_count = Attendance.objects.filter(student=student).filter(status = "Present").count()
+    absent_count = Attendance.objects.filter(student=student).filter(status = "Absent").count()
+    total_attendance = Attendance.objects.filter(student=student).count()
+    attendance_percentage = (
+        (present_count / total_attendance) * 100
+        if total_attendance else 0
+    )
+
     context = {
-        student: student,
-        "student": Student.objects.all(),
-        "course": Course.objects.all(),
-        "result": Result.objects.all(),
-        "attendance": Attendance.objects.all(),
+        "enrolled_course" : course,
+        "present_count" : present_count,
+        "absent_count" : absent_count,
+        "attendance_percentage" : round(attendance_percentage, 2),
+        "recent_attendance" : attendance[:5],
+        "student" : student,
+        "result_count" : result_count,
+        "recent_result" : result[:5]
     }
     return render(request, "edu_track/dashboards/student_dashboard.html", context)
 
