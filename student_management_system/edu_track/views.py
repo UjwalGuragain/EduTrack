@@ -116,6 +116,16 @@ def student_dashboard(request):
     }
     return render(request, "edu_track/dashboards/student_dashboard.html", context)
 
+#STUDENT PROFILE
+@student_required
+def my_profile(request):
+    student = request.user.student
+
+    context = {
+        "student" : student
+    }
+    return render(request, "edu_track/students/my_profile.html", context)
+
 #CRUD OPERATIONS FOR COURSE
 #Fetch all courses from Database and Send it to template
 def list_courses(request):
