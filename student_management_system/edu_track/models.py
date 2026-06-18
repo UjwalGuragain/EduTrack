@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 
 class Course(models.Model):
     course_name  = models.CharField(max_length=100)
+    course_code = models.CharField(max_length=10)
     DURATION_CHOICES = [
         (1, "1 Year"),
         (2, "2 Years"),
