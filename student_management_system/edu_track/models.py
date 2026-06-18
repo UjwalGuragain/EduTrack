@@ -31,6 +31,7 @@ class Student(models.Model):
     
 class Module(models.Model):
     module_name = models.CharField(max_length=100)
+    module_code = models.CharField(max_length=10)
     full_marks = models.DecimalField(max_digits=5, decimal_places=2)
     courses = models.ForeignKey(Course, on_delete=models.CASCADE)
 
