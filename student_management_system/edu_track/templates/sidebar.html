@@ -37,34 +37,39 @@
           </li>
 
           <li class="nav-item">
-            <a href="{% url 'course_list' %}" class="nav-link">
+            <a href="{% url 'my_course' %}" class="nav-link">
               <i class="nav-icon fas fa-book"></i>
               <p>My Course</p>
             </a>
           </li>
 
           <li class="nav-item">
-            <a href="{% url 'module_list' %}" class="nav-link">
+            <a href="{% url 'my_module' %}" class="nav-link">
               <i class="nav-icon fas fa-book-open"></i>
               <p>My Modules</p>
             </a>
           </li>
 
           <li class="nav-item">
-            <a href="{% url 'attendance_list' %}" class="nav-link">
+            <a href="{% url 'my_attendance' %}" class="nav-link">
               <i class="nav-icon fas fa-check"></i>
               <p>My Attendance</p>
             </a>
           </li>
 
           <li class="nav-item">
-            <a href="{% url 'result_list' %}" class="nav-link">
+            <a href="{% url 'my_result' %}" class="nav-link">
               <i class="nav-icon fas fa-chart-bar"></i>
               <p>My Results</p>
             </a>
           </li>
 
-
+          <li class="nav-item">
+            <a href="{% url 'password_change' %}" class="nav-link">
+              <i class="nav-icon fas fa-key"></i>
+              <p>Change Password</p>
+            </a>
+          </li>
 
           {% if user.is_authenticated %}
           <li class="nav-item">
@@ -150,6 +155,12 @@
             </a>
           </li>
 
+          <li class="nav-item">
+            <a href="{% url 'password_change' %}" class="nav-link">
+              <i class="nav-icon fas fa-key"></i>
+              <p>Change Password</p>
+            </a>
+          </li>
 
         {% if user.is_authenticated %}
         <li class="nav-item">
