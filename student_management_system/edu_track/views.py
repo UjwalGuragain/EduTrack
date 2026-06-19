@@ -152,6 +152,29 @@ def my_module(request):
     }
     return render(request, "edu_track/dashboards/my_module.html", context)
 
+#STUDENT ATTENDANCE
+@student_required
+def my_attendance(request):
+    student = request.user.student
+    attendance = Attendance.objects.filter(student=student)
+    present_count = Attendance.objects.filter(student=student).filter(status = "Present").count()
+    absent_count = Attendance.objects.filter(student=student).filter(status = "Absent").count()
+    total_attendance = Attendance.objects.filter(student=student).count()
+    attendance_percentage = (
+        (present_count / total_attendance) * 100
+        if total_attendance else 0
+    )
+
+    context = {
+        "present_count" : present_count,
+        "absent_count" : absent_count,
+        "attendance_percentage" : round(attendance_percentage, 2),
+        "student" : student,
+        "attendance" : attendance,
+        "total_attendance" : total_attendance
+    }
+    return render(request, "edu_track/dashboards/my_attendance.html", context)
+
 #CRUD OPERATIONS FOR COURSE
 #Fetch all courses from Database and Send it to template
 def list_courses(request):
