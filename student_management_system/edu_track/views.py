@@ -37,7 +37,9 @@ def user_register(request):
         if password != confirm_password:
             messages.error(request, "Passwords do not match")
             return redirect("register")
-
+        if len(password) < 9:
+            messages.error(request, "Passwords must be of atleast 8 characters")
+            return redirect("register")
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username already exists")
             return redirect("register")
@@ -124,7 +126,7 @@ def my_profile(request):
     context = {
         "student" : student
     }
-    return render(request, "edu_track/students/my_profile.html", context)
+    return render(request, "edu_track/dashboards/my_profile.html", context)
 
 #CRUD OPERATIONS FOR COURSE
 #Fetch all courses from Database and Send it to template
@@ -137,10 +139,12 @@ def list_courses(request):
 def course_add(request):
     print(request.user)
     if request.method == "POST":
+        code = request.POST.get("course_code")
         name = request.POST.get("course_name")
         duration = request.POST.get("course_duration")
 
         Course.objects.create(
+            course_code = code,
             course_name=name,
             course_duration=duration
         )
@@ -155,6 +159,7 @@ def course_update(request, id):
     course = Course.objects.get(id=id)
 
     if request.method == "POST":
+        course.course_code = request.POST.get("course_code")
         course.course_name = request.POST.get("course_name")
         course.course_duration = request.POST.get("course_duration")
         course.save()
@@ -212,10 +217,12 @@ def student_add(request):
 #Update students
 @instructor_required
 def student_update(request, id):
+    users = User.objects.filter(student__isnull=True)
     student = Student.objects.get(id=id)
     courses = Course.objects.all()
 
     if request.method == "POST":
+        student.user = User.objects.get(id=request.POST.get("user"))
         student.full_name = request.POST.get("full_name")
         student.address = request.POST.get("address")
         student.contact_number = request.POST.get("contact_number")
@@ -227,7 +234,7 @@ def student_update(request, id):
         student.save()
         return redirect("student_list")
 
-    return render(request, "edu_track/students/student_update.html",{"student": student, "courses": courses})
+    return render(request, "edu_track/students/student_update.html",{"student": student, "courses": courses, "users" : users})
 
 #Delete students
 @instructor_required
@@ -248,11 +255,13 @@ def module_add(request):
     course = Course.objects.all()
     if request.method == "POST":
         module_name = request.POST.get("module_name")
+        module_code = request.POST.get("mdoule_code")
         full_marks = request.POST.get("full_marks")
         courses = Course.objects.get(id = request.POST.get("courses"))
 
         Module.objects.create(
             module_name = module_name,
+            mdoule_code = module_code,
             full_marks = full_marks,
             courses = courses
         )
@@ -268,6 +277,7 @@ def module_update(request, id):
 
     if request.method == "POST":
         module.module_name = request.POST.get("module_name")
+        module.module_code = request.POST.get("module_code")
         module.full_marks = request.POST.get("full_marks")
         module.courses = Course.objects.get(id=request.POST.get("courses"))
         module.save()
