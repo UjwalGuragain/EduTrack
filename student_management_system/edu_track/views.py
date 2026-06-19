@@ -175,6 +175,29 @@ def my_attendance(request):
     }
     return render(request, "edu_track/dashboards/my_attendance.html", context)
 
+#STUDENT RESULT
+@student_required
+def my_result(request):
+    student = request.user.student
+    result = Result.objects.filter(student=student).select_related("module")
+    marks = [float(r.obtained_marks) for r in result]
+    average_marks = (
+        round(sum(marks) / len(marks), 2)
+        if marks else 0
+    )
+    highest_marks = max(marks) if marks else 0
+    lowest_marks = min(marks) if marks else 0
+    result_count = result.count()
+    context = {
+        "average_marks": average_marks,
+        "highest_marks" : highest_marks,
+        "lowest_marks" : lowest_marks,
+        "student" : student,
+        "result" : result,
+        "result_count" : result_count
+    }
+    return render(request, "edu_track/dashboards/my_result.html", context)
+
 #CRUD OPERATIONS FOR COURSE
 #Fetch all courses from Database and Send it to template
 def list_courses(request):
