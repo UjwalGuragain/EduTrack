@@ -140,6 +140,18 @@ def my_course(request):
     }
     return render(request, "edu_track/dashboards/my_course.html", context)
 
+#STUDENT MOUDLE
+@student_required
+def my_module(request):
+    student = request.user.student
+    module = Result.objects.filter(student=student).select_related("module")
+
+    context = {
+        "student" : student,
+        "module" : module
+    }
+    return render(request, "edu_track/dashboards/my_module.html", context)
+
 #CRUD OPERATIONS FOR COURSE
 #Fetch all courses from Database and Send it to template
 def list_courses(request):
