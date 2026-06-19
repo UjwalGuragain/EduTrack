@@ -12,7 +12,7 @@
   {% if courses and courses|length > 0 %}
     <table class = "table table-bordered table-striped">
         <tr>
-          <th>ID</th>
+          <th>Course Code</th>
           <th>Course Name</th>
           <th>Duration</th>
           <th>Actions</th>
@@ -20,7 +20,7 @@
 
         {% for course in courses %}
           <tr>
-            <td>{{ course.id }}</td>
+            <td>{{ course.course_code }}</td>
             <td>{{ course.course_name }}</td>
             <td>{{ course.get_course_duration_display|default:course.course_duration }}</td>
             <td>
