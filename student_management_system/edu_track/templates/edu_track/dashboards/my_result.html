@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+    
+    <div class = "col-lg-3 col-6">
+        <div class = "small-box bg-info">
+            <div class = "inner">
+                <p>Result Count</p>
+                <h3>{{ result_count }}</h3>
+            </div>
+        </div>
+    </div>
+    
+     <div class = "col-lg-3 col-6">
+        <div class = "small-box bg-info">
+            <div class = "inner">
+                <p>Average Mark</p>
+                <h3>{{ average_marks }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class = "col-lg-3 col-6">
+        <div class = "small-box bg-info">
+            <div class = "inner">
+                <p> Highest Mark</p>
+                <h3>{{ highest_marks }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class = "col-lg-3 col-6">
+        <div class = "small-box bg-info">
+            <div class = "inner">
+                <p> Lowest Mark</p>
+                <h3>{{ lowest_marks }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between w-100">
+                    <h3 class="card-title mb-0">My Results</h3>
+                    <div class="text-muted" style="font-size: 0.95rem;">
+                        <i class="fas fa-user mr-1"></i>
+                        {{ student.user }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                {% if result %}
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Module Code</th>
+                            <th>Module Name</th>
+                            <th>Obtained Marks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in result %}
+                        <tr>
+                            <td>{{ r.module.module_code }}</td>
+                            <td>{{ r.module.module_name }}</td>
+                            <td>{{ r.obtained_marks }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No results available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
