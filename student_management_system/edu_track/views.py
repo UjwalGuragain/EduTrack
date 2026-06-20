@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from .models import Course, Module, Student, Result, Attendance, Instructor
 from .decorators import *
+from django.db.models import Q
 
 #USER_LOGIN OPERATIONS
 def user_login(request):
@@ -200,6 +201,7 @@ def my_result(request):
 
 #CRUD OPERATIONS FOR COURSE
 #Fetch all courses from Database and Send it to template
+@instructor_required
 def list_courses(request):
     courses = Course.objects.all()
     return render(request, "edu_track/courses/course_list.html", {"courses": courses})
@@ -247,9 +249,23 @@ def course_delete(request, id):
 
 # CRUD OPERATIONS FOR STUDENT
 #Fetch all students from Database and Send it to template
+@instructor_required
 def list_students(request):
+    search = request.GET.get("search", "")
     students = Student.objects.all()
-    return render(request, "edu_track/students/student_list.html", {"students": students})
+
+    if search:
+        students = students.filter(
+        Q(full_name__icontains = search) | 
+        Q(email__icontains = search) |
+        Q(enrollment_number__icontains = search)
+        )
+
+    context = {
+            "students" : students,
+            "search" : search
+        }
+    return render(request, "edu_track/students/student_list.html", context)
 
 #Add new students
 @instructor_required
@@ -315,6 +331,7 @@ def student_delete(request, id):
 
 #CRUD OPERATIONS FOR MODULE
 #Fetch all modules from Database and Sent it to template
+@instructor_required
 def list_modules(request):
     module = Module.objects.all()
     return render(request, "edu_track/modules/module_list.html", {"modules" : module})
@@ -364,9 +381,22 @@ def module_delete(request, id):
 
 #CRUD OPERATIONS FOR RESULT
 #Fetch results from Database and Send it to template
+@instructor_required
 def list_result(request):
+    search = request.GET.get("search", "")
     result = Result.objects.all()
-    return render(request, "edu_track/results/result_list.html", {"results" : result})
+    
+    if search:
+        result = result.filter(
+        Q(student__full_name__icontains = search) |
+        Q(module__module_name__icontains = search)
+        )
+
+    context = {
+        "results" : result,
+        "search" : search
+    }
+    return render(request, "edu_track/results/result_list.html", context)
 
 #Add Results
 @instructor_required
@@ -411,9 +441,19 @@ def result_delete(request, id):
 
 #CRUD OPERATIONS FOR ATTENDANCE
 # Fetch all attendances from Database and Send it to template
+@instructor_required
 def list_attendance(request):
+    search = request.GET.get("search", "")
     attendance = Attendance.objects.all()
-    return render(request, "edu_track/attendance/attendance_list.html", {"attendance" : attendance})
+    if search:
+        attendance = attendance.filter(
+            Q(student__full_name__icontains = search)
+        )
+    context = {
+        "attendance" : attendance,
+        "search" : search
+    }
+    return render(request, "edu_track/attendance/attendance_list.html", context)
 
 #Add attendance
 @instructor_required
