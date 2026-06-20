@@ -1,43 +1,127 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class = "card">
-  <div class = "card-header">
-    <h1 class = "card-title">Results</h1>
-    <div class= "card-tools">
-      <a href="{% url 'result_add' %}" class="btn btn-sm btn-secondary">Add New Result</a>
-    </div>
-  </div>
-  <div class = "card-body">
-  {% if results and results|length > 0 %}
-    <table class = "table table-bordered table-striped">
-        <tr>
-          <th>ID</th>
-          <th>Student</th>
-          <th>Module</th>
-          <th>Obtained Marks</th>
-          <th>Actions</th>
-        </tr>
+<div class="card">
 
-        {% for result in results %}
-          <tr>
-            <td>{{ result.id }}</td>
-            <td>{{ result.student.full_name }}</td>
-            <td>{{ result.module.module_name }}</td>
-            <td>{{ result.obtained_marks }}</td>
-            <td>
-              <a href="{% url 'result_update' result.id %}" class="btn btn-warning btn-sm">Edit</a>
-              |
-              <a href="{% url 'result_delete' result.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this result?');">Delete</a>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p>No results found.</p>
-  {% endif %}
-  </div>
-</div>  
+    <div class="card-header">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <h3 class="card-title">
+                Results
+            </h3>
+
+            <div class="d-flex">
+
+                <form method="GET"
+                      action="{% url 'result_list' %}"
+                      class="mr-2">
+
+                    <div class="input-group input-group-sm" style="width: 300px;">
+
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control"
+                            value="{{ search }}"
+                            placeholder="Search results...">
+
+                        <div class="input-group-append">
+
+                            <button type="submit"
+                                    class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+
+                            {% if search %}
+                            <a href="{% url 'result_list' %}"
+                               class="btn btn-secondary">
+                                Clear
+                            </a>
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+                <a href="{% url 'result_add' %}"
+                   class="btn btn-success btn-sm">
+                    <i class="fas fa-plus"></i>
+                    Add Result
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="mb-3">
+            <span class="badge badge-info">
+                Found {{ results.count }} result record{{ results.count|pluralize }}
+            </span>
+        </div>
+
+        {% if results %}
+
+        <table class="table table-bordered table-striped">
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Student</th>
+                    <th>Module</th>
+                    <th>Obtained Marks</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for result in results %}
+
+                <tr>
+                    <td>{{ result.id }}</td>
+                    <td>{{ result.student.full_name }}</td>
+                    <td>{{ result.module.module_name }}</td>
+                    <td>{{ result.obtained_marks }}</td>
+
+                    <td>
+                        <a href="{% url 'result_update' result.id %}"
+                           class="btn btn-warning btn-sm">
+                            Edit
+                        </a>
+
+                        <a href="{% url 'result_delete' result.id %}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Delete this result?');">
+                            Delete
+                        </a>
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        {% else %}
+
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-circle"></i>
+            No result records found.
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
 
 {% endblock %}
