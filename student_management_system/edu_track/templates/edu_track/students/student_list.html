@@ -1,53 +1,136 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class = "card">
-  <div class = "card-header">
-    <h1 class = "card-title">Students</h1>
-    <div class= "card-tools">
-      <a href="{% url 'student_add' %}" class="btn btn-sm btn-secondary">Add New Student</a>
-    </div>
-  </div>
-  <div class = "card-body">
-  {% if students and students|length > 0 %}
-    <table class = "table table-bordered table-striped">
-        <tr>
-          <th>ID</th>
-          <th>Student Name</th>
-          <th>Address</th>
-          <th>Contact</th>
-          <th>Email</th>
-          <th>Guardian's Name</th>
-          <th>Enrollment Number</th>
-          <th>Enrolled Course</th>
-          <th>Enrollment Date</th>
-          <th>Actions</th>
-        </tr>
+<div class="card">
+    
+    <div class="card-header">
 
-        {% for student in students %}
-          <tr>
-            <td>{{ student.id }}</td>
-            <td>{{ student.full_name }}</td>
-            <td>{{ student.address }}</td>
-            <td>{{ student.contact_number }}</td>
-            <td>{{ student.email }}</td>
-            <td>{{ student.guardian_name }}</td>
-            <td>{{ student.enrollment_number }}</td>
-            <td>{{ student.enrolled_course.course_name }}</td>
-            <td>{{ student.enrollment_date }}</td>
-            <td>
-              <a href="{% url 'student_update' student.id %}" class = "btn btn-warning btn-sm">Edit</a>
-              |
-              <a href="{% url 'student_delete' student.id %}" class = "btn btn-danger btn-sm" onclick="return confirm('Delete this student?');">Delete</a>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p>No students found.</p>
-  {% endif %}
-  </div>
-</div>  
+        <div class="d-flex justify-content-between align-items-center">
+
+            <h3 class="card-title">
+                Students
+            </h3>
+
+            <div class="d-flex">
+
+                <form method="GET"
+                      action="{% url 'student_list' %}"
+                      class="mr-2">
+
+                    <div class="input-group input-group-sm" style="width: 300px;">
+
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control"
+                            value="{{ search }}"
+                            placeholder="Search students...">
+
+                        <div class="input-group-append">
+
+                            <button type="submit"
+                                    class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+
+                            {% if search %}
+                            <a href="{% url 'student_list' %}"
+                               class="btn btn-secondary">
+                                Clear
+                            </a>
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+                <a href="{% url 'student_add' %}"
+                   class="btn btn-success btn-sm">
+                    <i class="fas fa-plus"></i>
+                    Add Student
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="mb-3">
+            <span class="badge badge-info">
+                Found {{ students.count }} student record{{ students.count|pluralize }}
+            </span>
+        </div>
+
+        {% if students %}
+
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Student Name</th>
+                    <th>Address</th>
+                    <th>Contact</th>
+                    <th>Email</th>
+                    <th>Guardian</th>
+                    <th>Enrollment Number</th>
+                    <th>Course</th>
+                    <th>Enrollment Date</th>
+                    <th width="130">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for student in students %}
+
+                <tr>
+                    <td>{{ student.id }}</td>
+                    <td>{{ student.full_name }}</td>
+                    <td>{{ student.address }}</td>
+                    <td>{{ student.contact_number }}</td>
+                    <td>{{ student.email }}</td>
+                    <td>{{ student.guardian_name }}</td>
+                    <td>{{ student.enrollment_number }}</td>
+                    <td>{{ student.enrolled_course.course_name }}</td>
+                    <td>{{ student.enrollment_date }}</td>
+
+                    <td>
+                        <a href="{% url 'student_update' student.id %}"
+                           class="btn btn-warning btn-sm">
+                            Edit
+                        </a>
+
+                        <a href="{% url 'student_delete' student.id %}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Delete this student?');">
+                            Delete
+                        </a>
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        {% else %}
+
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-circle"></i>
+            No student records found.
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
 
 {% endblock %}
