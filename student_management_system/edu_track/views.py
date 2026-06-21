@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from .models import Course, Module, Student, Result, Attendance, Instructor
 from .decorators import *
 from django.db.models import Q
+from django.core.paginator import Paginator
 
 #USER_LOGIN OPERATIONS
 def user_login(request):
@@ -165,13 +166,16 @@ def my_attendance(request):
         (present_count / total_attendance) * 100
         if total_attendance else 0
     )
-
+    paginator = Paginator(attendance, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
     context = {
         "present_count" : present_count,
         "absent_count" : absent_count,
         "attendance_percentage" : round(attendance_percentage, 2),
         "student" : student,
-        "attendance" : attendance,
+        "attendance" : page_obj,
+        "page_obj" : page_obj,
         "total_attendance" : total_attendance
     }
     return render(request, "edu_track/dashboards/my_attendance.html", context)
@@ -189,12 +193,18 @@ def my_result(request):
     highest_marks = max(marks) if marks else 0
     lowest_marks = min(marks) if marks else 0
     result_count = result.count()
+
+    paginator = Paginator(result, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
     context = {
         "average_marks": average_marks,
         "highest_marks" : highest_marks,
         "lowest_marks" : lowest_marks,
         "student" : student,
-        "result" : result,
+        "result" : page_obj,
+        "page_obj" : page_obj,
         "result_count" : result_count
     }
     return render(request, "edu_track/dashboards/my_result.html", context)
@@ -204,7 +214,16 @@ def my_result(request):
 @instructor_required
 def list_courses(request):
     courses = Course.objects.all()
-    return render(request, "edu_track/courses/course_list.html", {"courses": courses})
+    paginator = Paginator(courses, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "courses" : page_obj,
+        "page_obj" : page_obj
+    }
+
+    return render(request, "edu_track/courses/course_list.html", context)
 
 #Add new courses
 @instructor_required
@@ -253,6 +272,9 @@ def course_delete(request, id):
 def list_students(request):
     search = request.GET.get("search", "")
     students = Student.objects.all()
+    paginator = Paginator(students, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     if search:
         students = students.filter(
@@ -262,7 +284,7 @@ def list_students(request):
         )
 
     context = {
-            "students" : students,
+            "students" : page_obj,
             "search" : search
         }
     return render(request, "edu_track/students/student_list.html", context)
@@ -334,7 +356,15 @@ def student_delete(request, id):
 @instructor_required
 def list_modules(request):
     module = Module.objects.all()
-    return render(request, "edu_track/modules/module_list.html", {"modules" : module})
+    paginator = Paginator(module, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        "modules" : page_obj,
+        "page_obj" : page_obj
+    }
+    return render(request, "edu_track/modules/module_list.html", context)
 
 #Add modules
 @instructor_required
@@ -385,6 +415,10 @@ def module_delete(request, id):
 def list_result(request):
     search = request.GET.get("search", "")
     result = Result.objects.all()
+    paginator = Paginator(result, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    
     
     if search:
         result = result.filter(
@@ -393,7 +427,8 @@ def list_result(request):
         )
 
     context = {
-        "results" : result,
+        "results" : page_obj,
+        "page_obj" : page_obj,
         "search" : search
     }
     return render(request, "edu_track/results/result_list.html", context)
@@ -445,12 +480,17 @@ def result_delete(request, id):
 def list_attendance(request):
     search = request.GET.get("search", "")
     attendance = Attendance.objects.all()
+    paginator = Paginator(attendance, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    
     if search:
         attendance = attendance.filter(
             Q(student__full_name__icontains = search)
         )
     context = {
-        "attendance" : attendance,
+        "attendance" : page_obj,
+        "page_obj" : page_obj,
         "search" : search
     }
     return render(request, "edu_track/attendance/attendance_list.html", context)
