@@ -5,7 +5,11 @@
   <div class = "card-header">
     <h1 class = "card-title">Courses</h1>
     <div class= "card-tools">
-      <a href="{% url 'course_add' %}" class="btn btn-sm btn-secondary">Add New Course</a>
+                <a href="{% url 'course_add' %}"
+                   class="btn btn-success btn-sm">
+                    <i class="fas fa-plus"></i>
+                    Add Course
+                </a>
     </div>
   </div>
   <div class = "card-body">
@@ -37,5 +41,5 @@
   {% endif %}
   </div>
 </div>
-
+{% include "pagination.html" %}
 {% endblock %}

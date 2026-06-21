@@ -34,7 +34,7 @@
                             </button>
 
                             {% if search %}
-                            <a href="{% url 'student_list' %}"
+                            <a href="{% url 'attendance_list' %}"
                                class="btn btn-secondary">
                                 Clear
                             </a>
@@ -46,10 +46,10 @@
 
                 </form>
 
-                <a href="{% url 'student_add' %}"
+                <a href="{% url 'attendance_add' %}"
                    class="btn btn-success btn-sm">
                     <i class="fas fa-plus"></i>
-                    Add Student
+                    Add Attendance
                 </a>
 
             </div>
@@ -99,5 +99,5 @@
   {% endif %}
   </div>
 </div>
-
+{% include "pagination.html" %}
 {% endblock %}
