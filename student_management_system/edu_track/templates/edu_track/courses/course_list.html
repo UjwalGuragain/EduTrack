@@ -13,6 +13,11 @@
     </div>
   </div>
   <div class = "card-body">
+          <div class="mb-3">
+            <span class="badge badge-info">
+                Found {{ courses|length }} course record{{ courses|length|pluralize }}
+            </span>
+        </div>
   {% if courses and courses|length > 0 %}
     <table class = "table table-bordered table-striped">
         <tr>
@@ -37,7 +42,10 @@
       </tbody>
     </table>
   {% else %}
-    <p>No courses found.</p>
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-circle"></i>
+            No course records found.
+        </div>
   {% endif %}
   </div>
 </div>
