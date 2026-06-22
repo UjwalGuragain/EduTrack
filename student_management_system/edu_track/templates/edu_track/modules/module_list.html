@@ -13,6 +13,11 @@
     </div>
   </div>
   <div class = "card-body">
+          <div class="mb-3">
+            <span class="badge badge-info">
+                Found {{ modules|length }} module record{{ modules|length|pluralize }}
+            </span>
+        </div>
   {% if modules and modules|length > 0 %}
     <table class = "table table-bordered table-striped">
         <tr>
