@@ -62,7 +62,7 @@
 
         <div class="mb-3">
             <span class="badge badge-info">
-                Found {{ results.count }} result record{{ results.count|pluralize }}
+                Found {{ results|length }} result record{{ results|length|pluralize }}
             </span>
         </div>
 
@@ -74,7 +74,8 @@
                 <tr>
                     <th>ID</th>
                     <th>Student</th>
-                    <th>Module</th>
+                    <th>Module Code</th>
+                    <th>Module Name</th>
                     <th>Obtained Marks</th>
                     <th>Actions</th>
                 </tr>
@@ -87,6 +88,7 @@
                 <tr>
                     <td>{{ result.id }}</td>
                     <td>{{ result.student.full_name }}</td>
+                    <td>{{ result.module.module_code }}</td>
                     <td>{{ result.module.module_name }}</td>
                     <td>{{ result.obtained_marks }}</td>
 
