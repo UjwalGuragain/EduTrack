@@ -81,8 +81,18 @@
             <td>{{ a.id }}</td>
             <td>{{ a.student.full_name }}</td>
             <td>{{ a.date }}</td>
-            <td>{{ a.status }}</td>
             <td>
+                {% if a.status == "Present" %}
+                            <span class="badge badge-success">
+                                Present
+                            </span>
+                        {% else %}
+                            <span class="badge badge-danger">
+                                Absent
+                            </span>
+                        {% endif %}
+                    </td>
+              <td>
               <a href="{% url 'attendance_update' a.id %}" class = "btn btn-warning btn-sm">Edit</a>
               |
               <a href="{% url 'attendance_delete' a.id %}" class = "btn btn-danger btn-sm" onclick="return confirm('Delete this attendance?');">Delete</a>
