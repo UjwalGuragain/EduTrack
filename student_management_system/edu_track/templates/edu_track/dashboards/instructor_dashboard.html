@@ -29,7 +29,7 @@
       </div>
     </div>
   </div>
-  
+
   <div class ="col-lg-3">
     <div class="small-box bg-info">
       <div class="inner">
@@ -38,6 +38,126 @@
       </div>
     </div>
   </div>
+
+</div>
+
+<div class="card">
+
+    <div class="card-header">
+        <h3 class="card-title">
+            Attendance Overview
+        </h3>
+    </div>
+
+    <div class="card-body">
+        <p>
+            Present Records:
+            <strong>{{ present_count }}</strong>
+        </p>
+
+        <p>
+            Absent Records:
+            <strong>{{ absent_count }}</strong>
+        </p>
+
+        <div class="progress">
+            <div class="progress-bar"
+                 role="progressbar"
+                 style="width: {{ attendance_percentage }}%">
+                {{ attendance_percentage }}%
+            </div>
+        </div>
+
+    </div>
+
+</div>
+<div class="row">
+
+    <div class="col-md-6">
+
+        <div class="card card-info">
+
+            <div class="card-header">
+                <h3 class="card-title">
+                    Quick Insights
+                </h3>
+            </div>
+
+            <div class="card-body">
+
+                <ul class="list-group">
+
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Students Enrolled This Month</span>
+                        <span class="badge badge-info">
+                            {{ students_this_month }}
+                        </span>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Attendance Recorded Today</span>
+                        <span class="badge badge-info">
+                            {{ attendance_today }}
+                        </span>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Results Added This Week</span>
+                        <span class="badge badge-info">
+                            {{ results_this_week }}
+                        </span>
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-6">
+
+        <div class="card card-warning">
+
+            <div class="card-header">
+                <h3 class="card-title">
+                    Action Items
+                </h3>
+            </div>
+
+            <div class="card-body">
+
+                <ul class="list-group">
+
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Students Without Attendance</span>
+                        <span class="badge badge-danger">
+                            {{ students_without_attendance }}
+                        </span>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Students Without Results</span>
+                        <span class="badge badge-danger">
+                            {{ students_without_results }}
+                        </span>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Courses Without Modules</span>
+                        <span class="badge badge-danger">
+                            {{ courses_without_modules }}
+                        </span>
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
 
@@ -70,8 +190,100 @@
       </tbody>
     </table>
   {% else %}
-      <p>No recent students found.</p>
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-circle"></i>
+            No recent students found.
+        </div>
   {% endif %}
   </div>
 </div>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Recent Results</h3>
+  </div>
+  <div class="card-body">
+    {% if recent_results %}
+    <table class="table bordered table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Student Name</th>
+          <th>Module Code</th>
+          <th>Module Name</th>
+          <th>Obtained Marks</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for result in recent_results %}
+        <tr>
+          <td>{{ result.id }}</td>
+          <td>{{ result.student.full_name }}</td>
+          <td>{{ result.module.module_code }}</td>
+          <td>{{ result.module.module_name }}</td>
+          <td>{{ result.obtained_marks }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-circle"></i>
+            No recent results found.
+        </div>
+  {% endif %}
+  </div>
+</div>
+
+<div class="card">
+
+    <div class="card-header">
+        <h3 class="card-title">
+            Recent Attendance
+        </h3>
+    </div>
+
+    <div class="card-body">
+
+        <table class="table table-bordered">
+
+            <thead>
+                <tr>
+                  <th>ID</th>
+                    <th>Student</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for attendance in recent_attendance %}
+                <tr>
+                    <td>{{ attendance.id }}</td>
+                    <td>{{ attendance.student.full_name }}</td>
+                    <td>{{ attendance.date }}</td>
+
+                    <td>
+                        {% if attendance.status == "Present" %}
+                            <span class="badge badge-success">
+                                Present
+                            </span>
+                        {% else %}
+                            <span class="badge badge-danger">
+                                Absent
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
 {% endblock %}
