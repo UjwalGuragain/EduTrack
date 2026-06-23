@@ -6,7 +6,7 @@ from .models import Course, Module, Student, Result, Attendance, Instructor
 from .decorators import *
 from django.db.models import Q
 from django.core.paginator import Paginator
-
+from django.utils import timezone
 #USER_LOGIN OPERATIONS
 def user_login(request):
     if request.method == "POST":
@@ -78,14 +78,45 @@ def instructor_dashboard(request):
     if not hasattr(request.user,"instructor"):
         return redirect("login")
     
+    present_count = Attendance.objects.filter(status = "Present").count()
+    absent_count = Attendance.objects.filter(status = "Absent").count()
+    total_attendance = Attendance.objects.count()
+    attendance_percentage = (
+        (present_count / total_attendance) * 100
+        if total_attendance else 0
+    )
+
+    today = timezone.now().date()
+    students_this_month = Student.objects.filter(
+    enrollment_date__month=today.month,
+    enrollment_date__year=today.year).count()
+
+    attendance_today = Attendance.objects.filter(date=today).count()
+    results_this_week = Result.objects.filter(id__isnull=False).order_by("-id")[:7].count()
+    students_without_attendance = Student.objects.exclude(attendance__isnull=False).count()
+    students_without_results = Student.objects.exclude(result__isnull=False).count()
+    courses_without_modules = Course.objects.exclude(module__isnull=True).count()
+
     instructor = request.user.instructor
     context = {
         "instructor" : instructor,
-        "recent_students": Student.objects.order_by("-id")[:10],
+        "recent_results" : Result.objects.order_by("-id")[:5],
+        "recent_students": Student.objects.order_by("-id")[:5],
         "student_count": Student.objects.count(),
         "course_count": Course.objects.count(),
         "module_count": Module.objects.count(),
         "result_count" : Result.objects.count(),
+        "present_count" : present_count,
+        "absent_count" : absent_count,
+        "recent_attendance" : Attendance.objects.order_by("-id")[:5],
+        "attendance_percentage" : round(attendance_percentage, 2),
+        "students_this_month": students_this_month,
+        "attendance_today": attendance_today,
+        "results_this_week": results_this_week,
+        "students_without_attendance": students_without_attendance,
+        "students_without_results": students_without_results,
+        "courses_without_modules": courses_without_modules,
+        
     }
     return render(request, "edu_track/dashboards/instructor_dashboard.html", context)
 
