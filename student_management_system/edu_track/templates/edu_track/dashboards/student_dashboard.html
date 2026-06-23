@@ -55,6 +55,7 @@
         <table class = "table bordered table-striped">
             <thead>
                 <tr>
+                    <th>Courde Code</th>
                     <th>Course Name</th>
                     <th>Course Duration</th>
                     <th>Enrollment Date</th>
@@ -63,6 +64,7 @@
             <tbody>
                 {% for course in enrolled_course %}
                 <tr>
+                    <td>{{ course.course_code }}</td>
                     <td>{{ course.course_name }}</td>
                     <td>{{ course.course_duration }} Years</td>
                     <td>{{ student.enrollment_date }}</td>
@@ -92,7 +94,17 @@
                 {% for attendance in recent_attendance %}
                 <tr>
                     <td>{{ attendance.date }}</td>
-                    <td>{{ attendance.status }}</td>
+                    <td>
+                        {% if attendance.status == "Present" %}
+                            <span class="badge badge-success">
+                                Present
+                            </span>
+                        {% else %}
+                            <span class="badge badge-danger">
+                                Absent
+                            </span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -112,13 +124,15 @@
         <table class = "table bordered table-striped">
             <thead>
                 <tr>
-                    <th>Module</th>
+                    <th>Module Code</th>
+                    <th>Module Name</th>
                     <th>Score</th>
                 </tr>
             </thead>
             <tbody>
                 {% for result in recent_result %}
                 <tr>
+                    <td>{{ result.module.module_code }}</td>
                     <td>{{ result.module.module_name }}</td>
                     <td>{{ result.obtained_marks }}</td>
                 </tr>
