@@ -1,4 +1,413 @@
 {% extends 'base.html' %}
+
 {% block content %}
+
+<div class="container-fluid">
+
+    <div class="card ">
+
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div class = "card-info">
+
+                    <h2 class="mb-1">
+                        {{ student.full_name }}
+                    </h2>
+
+                    <p class="text-muted mb-2">
+                        {{ student.email }}
+                    </p>
+
+                    <span class="badge badge-primary">
+                        {{ student.enrolled_course.course_name }}
+                    </span>
+
+                    <span class="badge badge-info ml-2">
+                        {{ student.enrollment_number }}
+                    </span>
+
+                </div>
+
+                <div class="card-tools">
+                    <a href="{% url 'student_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                         Back to Students
+                     </a>
+                    </br>
+                </br>
+                    <a href="{% url 'student_update' student.id %}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i>
+                        Edit Student
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="info-box">
+
+                <span class="info-box-icon bg-success">
+                    <i class="fas fa-user-check"></i>
+                </span>
+
+                <div class="info-box-content">
+
+                    <span class="info-box-text">
+                        Attendance Rate
+                    </span>
+
+                    <span class="info-box-number">
+                        {{ attendance_percentage }}%
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="info-box">
+
+                <span class="info-box-icon bg-primary">
+                    <i class="fas fa-check-circle"></i>
+                </span>
+
+                <div class="info-box-content">
+
+                    <span class="info-box-text">
+                        Present Days
+                    </span>
+
+                    <span class="info-box-number">
+                        {{ present_count }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="info-box">
+
+                <span class="info-box-icon bg-danger">
+                    <i class="fas fa-times-circle"></i>
+                </span>
+
+                <div class="info-box-content">
+
+                    <span class="info-box-text">
+                        Absent Days
+                    </span>
+
+                    <span class="info-box-number">
+                        {{ absent_count }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="info-box">
+
+                <span class="info-box-icon bg-info">
+                    <i class="fas fa-chart-bar"></i>
+                </span>
+
+                <div class="info-box-content">
+
+                    <span class="info-box-text">
+                        Total Results
+                    </span>
+
+                    <span class="info-box-number">
+                        {{ results.count }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-6">
+
+            <div class="card">
+
+                <div class="card-header">
+                    <h3 class="card-title">
+                        Personal Information
+                    </h3>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row mb-3">
+                        <div class="col-5">
+                            <strong>Email</strong>
+                        </div>
+                        <div class="col-7">
+                            {{ student.email }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-5">
+                            <strong>Contact Number</strong>
+                        </div>
+                        <div class="col-7">
+                            {{ student.contact_number }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-5">
+                            <strong>Address</strong>
+                        </div>
+                        <div class="col-7">
+                            {{ student.address }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-5">
+                            <strong>Guardian Name</strong>
+                        </div>
+                        <div class="col-7">
+                            {{ student.guardian_name }}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-6">
+
+            <div class="card">
+
+                <div class="card-header">
+                    <h3 class="card-title">
+                        Enrollment Information
+                    </h3>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row mb-3">
+                        <div class="col-5">
+                            <strong>Enrollment Number</strong>
+                        </div>
+                        <div class="col-7">
+                            {{ student.enrollment_number }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-5">
+                            <strong>Course</strong>
+                        </div>
+                        <div class="col-7">
+                            {{ student.enrolled_course.course_name }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-5">
+                            <strong>Course Duration</strong>
+                        </div>
+                        <div class="col-7">
+                            {{ student.enrolled_course.course_duration }} Years
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-5">
+                            <strong>Enrollment Date</strong>
+                        </div>
+                        <div class="col-7">
+                            {{ student.enrollment_date }}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h3 class="card-title">
+                Attendance History
+            </h3>
+
+            <div class="card-tools">
+                <span class="badge badge-success">
+                    {{ attendance.count }} Record{{ attendance.count|pluralize }}
+                </span>
+            </div>
+
+        </div>
+
+        <div class="card-body">
+
+            {% if attendance %}
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for record in attendance %}
+
+                    <tr>
+
+                        <td>{{ record.date }}</td>
+
+                        <td>
+
+                            {% if record.status == "Present" %}
+
+                                <span class="badge badge-success">
+                                    Present
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge badge-danger">
+                                    Absent
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            {% else %}
+
+            <div class="p-3">
+                <div class="alert alert-warning mb-0">
+                    No attendance records found.
+                </div>
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h3 class="card-title">
+                Results History
+            </h3>
+
+            <div class="card-tools">
+                <span class="badge badge-info">
+                    {{ result.count }} Result{{ result.count|pluralize }}
+                </span>
+            </div>
+
+        </div>
+
+        <div class="card-body">
+
+            {% if result %}
+
+            <table class="table table-bordered table-striped">
+
+                <thead>
+                    <tr>
+                        <th>Module</th>
+                        <th>Module</th>
+                        <th>Obtained Marks</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for result in result %}
+
+                    <tr>
+
+                        <td>
+                            {{ result.module.module_code }}
+                        </td>
+
+                        <td>
+                            {{ result.module.module_name }}
+                        </td>
+
+                        <td>
+                            {{ result.obtained_marks }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            {% else %}
+
+            <div class="p-3">
+                <div class="alert alert-warning mb-0">
+                    No results found.
+                </div>
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
 
 {% endblock %}
