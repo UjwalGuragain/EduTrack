@@ -99,8 +99,14 @@
                     <td>{{ student.enrolled_course.course_name }}</td>
                     <td>{{ student.enrollment_date }}</td>
 
-                    <td>
-                        <a href="{% url 'student_update' student.id %}"
+                    <td >
+                        <a href="{% url 'student_detail' student.id %}"
+                           class="btn btn-info btn-sm">
+                            View Student
+                        </a>
+                    </br>
+                </br>
+                            <a href="{% url 'student_update' student.id %}"
                            class="btn btn-warning btn-sm">
                             Edit
                         </a>
