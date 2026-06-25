@@ -31,6 +31,7 @@ path("student/add/", views.student_add, name = "student_add"),
 path("student/update/<int:id>/", views.student_update, name = "student_update"),
 path("student/delete/<int:id>/", views.student_delete, name = "student_delete"),
 path("my-profile/", views.my_profile, name = "my_profile"),
+path("student/student-detail/<int:id>/", views.student_detail, name = "student_detail"),
 
 path("module/", views.list_modules, name = "module_list"),
 path("module/add/", views.module_add, name = "module_add"),
