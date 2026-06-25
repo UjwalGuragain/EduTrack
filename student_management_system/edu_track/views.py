@@ -7,6 +7,7 @@ from .decorators import *
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.utils import timezone
+
 #USER_LOGIN OPERATIONS
 def user_login(request):
     if request.method == "POST":
@@ -240,6 +241,30 @@ def my_result(request):
     }
     return render(request, "edu_track/dashboards/my_result.html", context)
 
+#Display overall details of the student
+@instructor_required
+def student_detail(request, id):
+    student = Student.objects.get(id=id)
+    attendance = Attendance.objects.filter(student=student)
+    result = Result.objects.filter(student=student).select_related("module")
+    present_count = attendance.filter(status = "Present").count()
+    absent_count = attendance.filter(status = "Absent").count()
+    total_attendance = attendance.count()
+    attendance_percentage = (
+        (present_count / total_attendance) * 100
+        if total_attendance else 0
+    )
+
+    context = {
+        "student" : student,
+        "result" : result,
+        "attendance" : attendance,
+        "present_count" : present_count,
+        "absent_count" : absent_count,
+        "attendance_percentage" : round(attendance_percentage, 2)
+    }
+
+    return render(request, "edu_track/students/student_detail.html", context)
 #CRUD OPERATIONS FOR COURSE
 #Fetch all courses from Database and Send it to template
 @instructor_required
