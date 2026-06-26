@@ -18,7 +18,36 @@
     </a>
 
     <div class="sidebar">
+      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
 
+    <div class="image">
+
+        {% if user.student.profile_picture %}
+            <img src="{{ user.student.profile_picture.url }}"
+     class="img-circle elevation-2"
+     alt="Student"
+     style="
+        width:45px;
+        height:45px;
+        object-fit:cover;
+        object-position:center;
+        border-radius:50%;
+     ">
+        {% else %}
+            <img src="https://adminlte.io/themes/v3/dist/img/user2-160x160.jpg"
+                 class="img-circle elevation-2"
+                 alt="Student">
+        {% endif %}
+
+    </div>
+
+    <div class="info">
+        <a href="{% url 'student_profile' %}" class="d-block">
+            {{ user.student.full_name }}
+        </a>
+    </div>
+
+</div>
       <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column">
 
@@ -30,35 +59,35 @@
           </li>
 
           <li class="nav-item">
-            <a href="{% url 'my_profile' %}" class="nav-link">
+            <a href="{% url 'student_profile' %}" class="nav-link">
               <i class="nav-icon fas fa-user"></i>
               <p>My Profile</p>
             </a>
           </li>
 
           <li class="nav-item">
-            <a href="{% url 'my_course' %}" class="nav-link">
+            <a href="{% url 'student_course' %}" class="nav-link">
               <i class="nav-icon fas fa-book"></i>
               <p>My Course</p>
             </a>
           </li>
 
           <li class="nav-item">
-            <a href="{% url 'my_module' %}" class="nav-link">
+            <a href="{% url 'student_module' %}" class="nav-link">
               <i class="nav-icon fas fa-book-open"></i>
               <p>My Modules</p>
             </a>
           </li>
 
           <li class="nav-item">
-            <a href="{% url 'my_attendance' %}" class="nav-link">
+            <a href="{% url 'student_attendance' %}" class="nav-link">
               <i class="nav-icon fas fa-check"></i>
               <p>My Attendance</p>
             </a>
           </li>
 
           <li class="nav-item">
-            <a href="{% url 'my_result' %}" class="nav-link">
+            <a href="{% url 'student_result' %}" class="nav-link">
               <i class="nav-icon fas fa-chart-bar"></i>
               <p>My Results</p>
             </a>
@@ -109,7 +138,36 @@
     </a>
 
     <div class="sidebar">
+      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
 
+    <div class="image">
+
+        {% if user.instructor.profile_picture %}
+            <img src="{{ user.instructor.profile_picture.url }}"
+     class="img-circle elevation-2"
+     alt="Instructor"
+     style="
+        width:45px;
+        height:45px;
+        object-fit:cover;
+        object-position:center;
+        border-radius:50%;
+     ">
+        {% else %}
+            <img src="https://adminlte.io/themes/v3/dist/img/user2-160x160.jpg"
+                 class="img-circle elevation-2"
+                 alt="Instructor">
+        {% endif %}
+
+    </div>
+
+    <div class="info">
+        <a href="{% url 'instructor_profile' %}" class="d-block">
+            {{ user.instructor.full_name }}
+        </a>
+    </div>
+
+</div>
       <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column">
 
