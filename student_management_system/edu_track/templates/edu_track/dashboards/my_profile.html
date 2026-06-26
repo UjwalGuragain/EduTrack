@@ -15,6 +15,34 @@
             </div>
 
             <div class="card-body">
+                <div class="text-center mb-4">
+
+    {% if student.profile_picture %}
+        <img src="{{ student.profile_picture.url }}"
+             class="img-circle elevation-2"
+             width="150"
+             height="150"
+             style="object-fit: cover;">
+    {% else %}
+        <img src="https://ui-avatars.com/api/?name={{ student.full_name|urlencode }}&size=150"
+             class="img-circle elevation-2">
+    {% endif %}
+
+    <div class="mt-3">
+
+        <a href="{% url 'student_upload_picture' %}"
+           class="btn btn-info">
+
+            <i class="fas fa-camera"></i>
+
+            Change Profile Picture
+
+        </a>
+
+    </div>
+
+</div>
+                
                 <div class="row">
                     <div class="col-md-4">
                         <div class="info-box">
