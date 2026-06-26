@@ -26,6 +26,7 @@ class Student(models.Model):
     enrollment_number = models.CharField(max_length=20, unique=True)
     enrolled_course = models.ForeignKey(Course, on_delete=models.CASCADE)
     enrollment_date = models.DateField()
+    profile_picture = models.ImageField(upload_to="students/", blank=True, null=True)
 
     def __str__(self):
         return self.full_name
@@ -66,6 +67,7 @@ class Instructor(models.Model):
     email = models.EmailField()
     address = models.CharField(max_length=100)
     qualification = models.CharField(max_length=100)
+    profile_picture = models.ImageField(upload_to="instructors/", blank=True, null=True)
 
     def __str__(self):
         return self.full_name
