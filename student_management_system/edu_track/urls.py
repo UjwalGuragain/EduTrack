@@ -33,6 +33,7 @@ path("student/delete/<int:id>/", views.student_delete, name = "student_delete"),
 path("my-profile/", views.my_profile, name = "my_profile"),
 path("student/student-detail/<int:id>/", views.student_detail, name = "student_detail"),
 path("student/export/csv/", views.student_export_csv, name = "student_export_csv"),
+path("student/import/csv/", views.student_import_csv, name = "student_import_csv"),
 
 path("module/", views.list_modules, name = "module_list"),
 path("module/add/", views.module_add, name = "module_add"),
