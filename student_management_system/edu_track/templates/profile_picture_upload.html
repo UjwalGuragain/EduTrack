@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+
+    <div class="col-md-6">
+
+        <div class="card card-primary">
+
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-camera mr-2"></i>
+                    Change Profile Picture
+                </h3>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+
+                {% csrf_token %}
+
+                <div class="card-body">
+
+                    <div class="text-center mb-4">
+
+                        {% if picture %}
+                            <img src="{{ picture.url }}"
+                                 class="img-circle elevation-2"
+                                 width="150"
+                                 height="150"
+                                 style="object-fit: cover;">
+                        {% else %}
+                            <i class="fas fa-user-circle text-secondary"
+                               style="font-size:150px;"></i>
+                        {% endif %}
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Select a new profile picture</label>
+
+                        {{ form.profile_picture }}
+
+                        <small class="form-text text-muted">
+                            Supported formats: JPG, JPEG, PNG
+                        </small>
+
+                    </div>
+
+                </div>
+
+                <div class="card-footer d-flex justify-content-between">
+
+                    <a href="{{ request.META.HTTP_REFERER|default:'/' }}"
+                       class="btn btn-secondary">
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-primary">
+
+                        <i class="fas fa-upload"></i>
+
+                        Upload Picture
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
