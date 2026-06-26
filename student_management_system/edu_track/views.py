@@ -9,6 +9,7 @@ from django.core.paginator import Paginator
 from django.utils import timezone
 import csv
 from django.http import HttpResponse
+from .forms import InstructorProfilePictureForm, StudentProfilePictureForm
 
 #USER_LOGIN OPERATIONS
 def user_login(request):
@@ -607,7 +608,8 @@ def student_export_csv(request):
     for student in students:
         writer.writerow([student.full_name, student.address, student.contact_number, student.email, student.guardian_name, student.enrollment_number, student.enrolled_course, student.enrollment_date])
     return response
-    
+
+#IMPORT STUDENT LIST FROM CSV
 @instructor_required
 def student_import_csv(request):
     if request.method == "POST":
@@ -641,3 +643,18 @@ def student_import_csv(request):
         return redirect("student_list")
     
     return render(request, "edu_track/students/import_students_csv.html")
+
+#INSTRUCTOR PROFILE
+def instructor_profile(request):
+    instructor = request.user.instructor
+
+    context = {
+        "instructor": instructor,
+    }
+
+    return render(
+        request,
+        "edu_track/dashboards/instructor_profile.html",
+        context,
+    )
+
