@@ -18,9 +18,35 @@
 <div class="wrapper">
 {% include 'sidebar.html' %}
   <div class="content-wrapper p-3">
-{% block content %}
-{% endblock %}
-  </div>
+    
+<div class="content">
+
+    <div class="container-fluid">
+
+        {% if messages %}
+            {% for message in messages %}
+
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+
+                    {{ message }}
+
+                    <button type="button"
+                            class="close"
+                            data-dismiss="alert">
+
+                        <span>&times;</span>
+
+                    </button>
+
+                </div>
+
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+
+    </div>
 
 </div>
 <!-- JS -->
