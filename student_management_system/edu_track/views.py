@@ -658,3 +658,44 @@ def instructor_profile(request):
         context,
     )
 
+@student_required
+def student_upload_picture(request):
+    student = request.user.student
+
+    if request.method == "POST":
+        form = StudentProfilePictureForm(
+            request.POST,
+            request.FILES,
+            instance=student
+        )
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile picture updated successfully.")
+            return redirect("student_profile")
+
+    else:
+        form = StudentProfilePictureForm(instance=student)
+
+    return render(request, "profile_picture_upload.html", {"form": form, "picture": student.profile_picture} )
+
+@instructor_required
+def instructor_upload_picture(request):
+    instructor = request.user.instructor
+
+    if request.method == "POST":
+        form = InstructorProfilePictureForm(
+            request.POST,
+            request.FILES,
+            instance=instructor
+        )
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile picture updated successfully.")
+            return redirect("instructor_profile")
+
+    else:
+        form = InstructorProfilePictureForm(instance=instructor)
+
+    return render(request, "profile_picture_upload.html", {"form": form, "picture": instructor.profile_picture})
