@@ -157,7 +157,7 @@ def student_dashboard(request):
 
 #STUDENT PROFILE
 @student_required
-def my_profile(request):
+def student_profile(request):
     student = request.user.student
 
     context = {
@@ -167,7 +167,7 @@ def my_profile(request):
 
 #STUDENT COURSE
 @student_required
-def my_course(request):
+def student_course(request):
     student = request.user.student
     course = Course.objects.filter(student=student)
 
@@ -179,7 +179,7 @@ def my_course(request):
 
 #STUDENT MOUDLE
 @student_required
-def my_module(request):
+def student_module(request):
     student = request.user.student
     module = Result.objects.filter(student=student).select_related("module")
 
@@ -191,7 +191,7 @@ def my_module(request):
 
 #STUDENT ATTENDANCE
 @student_required
-def my_attendance(request):
+def student_attendance(request):
     student = request.user.student
     attendance = Attendance.objects.filter(student=student)
     present_count = Attendance.objects.filter(student=student).filter(status = "Present").count()
@@ -217,7 +217,7 @@ def my_attendance(request):
 
 #STUDENT RESULT
 @student_required
-def my_result(request):
+def student_result(request):
     student = request.user.student
     result = Result.objects.filter(student=student).select_related("module")
     marks = [float(r.obtained_marks) for r in result]
@@ -645,6 +645,7 @@ def student_import_csv(request):
     return render(request, "edu_track/students/import_students_csv.html")
 
 #INSTRUCTOR PROFILE
+@instructor_required
 def instructor_profile(request):
     instructor = request.user.instructor
 
