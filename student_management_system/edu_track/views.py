@@ -7,6 +7,8 @@ from .decorators import *
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.utils import timezone
+import csv
+from django.http import HttpResponse
 
 #USER_LOGIN OPERATIONS
 def user_login(request):
@@ -592,3 +594,17 @@ def attendance_delete(request, id):
     attendance = Attendance.objects.get(id = id)
     attendance.delete()
     return redirect("attendance_list")
+
+#EXPORT STUDENT LIST AS CSV
+@instructor_required
+def student_export_csv(request):
+    response = HttpResponse(content_type = "text/csv")
+    response["Content-Disposition"] = 'attachment; filename = "Edutrack Students.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(["ID","Full Name", "Address", "Contact Number", "Email", "Guardian Name", "Enrollment Number", "Enrolled Course", "Enrollment Date"])
+
+    students = Student.objects.all()
+    for student in students:
+        writer.writerow([student.id, student.full_name, student.address, student.contact_number, student.email, student.guardian_name, student.enrollment_number, student.enrolled_course, student.enrollment_date])
+        return response
