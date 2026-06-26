@@ -19,6 +19,9 @@ path("password-change/done/", auth_views.PasswordChangeDoneView.as_view(template
 
 path("instructor-dashboard/", views.instructor_dashboard, name = "instructor_dashboard"),
 path("student-dashboard/", views.student_dashboard, name = "student_dashboard"),
+path("my-profile/", views.instructor_profile, name = "instructor_profile"),
+path("student/profile/picture/", views.student_upload_picture, name="student_upload_picture"),
+path("instructor/profile/picture/", views.instructor_upload_picture, name="instructor_upload_picture"),
 
 path("course/", views.list_courses, name = "course_list"),
 path("course/add/", views.course_add, name = "course_add"),
