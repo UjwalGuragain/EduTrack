@@ -602,9 +602,42 @@ def student_export_csv(request):
     response["Content-Disposition"] = 'attachment; filename = "Edutrack Students.csv"'
 
     writer = csv.writer(response)
-    writer.writerow(["ID","Full Name", "Address", "Contact Number", "Email", "Guardian Name", "Enrollment Number", "Enrolled Course", "Enrollment Date"])
-
-    students = Student.objects.all()
+    writer.writerow(["Full Name", "Address", "Contact Number", "Email", "Guardian Name", "Enrollment Number", "Enrolled Course", "Enrollment Date"])
+    students = Student.objects.select_related("enrolled_course")
     for student in students:
-        writer.writerow([student.id, student.full_name, student.address, student.contact_number, student.email, student.guardian_name, student.enrollment_number, student.enrolled_course, student.enrollment_date])
-        return response
+        writer.writerow([student.full_name, student.address, student.contact_number, student.email, student.guardian_name, student.enrollment_number, student.enrolled_course, student.enrollment_date])
+    return response
+    
+@instructor_required
+def student_import_csv(request):
+    if request.method == "POST":
+        csv_file = request.FILES.get("csv_file")
+
+        if not csv_file:
+            messages.error(request, "Please select a CSV File.")
+            return redirect("student_import_csv")
+        
+        decoded_file = csv_file.read().decode("utf-8").splitlines()
+        reader = csv.DictReader(decoded_file)
+
+        imported = 0
+
+        for row in reader:
+            course = Course.objects.get(course_name = row ['Enrolled Course'])
+            Student.objects.create(
+                full_name = row ['Full Name'],
+                address = row ['Address'],
+                contact_number = row ['Contact Number'],
+                email = row ['Email'],
+                guardian_name = row ['Guardian Name'],
+                enrollment_number = row ['Enrollment Number'],
+                enrolled_course = course,
+                enrollment_date = row ['Enrollment Date']
+            )
+
+            imported += 1
+
+        messages.success(request, f"{imported} students imported successfully.")
+        return redirect("student_list")
+    
+    return render(request, "edu_track/students/import_students_csv.html")
