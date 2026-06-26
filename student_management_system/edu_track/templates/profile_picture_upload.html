@@ -4,9 +4,9 @@
 
 <div class="row justify-content-center">
 
-    <div class="col-md-6">
+    <div class="col-md-5">
 
-        <div class="card card-primary">
+        <div class="card card-primary card-outline">
 
             <div class="card-header">
                 <h3 class="card-title">
@@ -15,32 +15,41 @@
                 </h3>
             </div>
 
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" id="picture-form">
 
                 {% csrf_token %}
 
-                <div class="card-body">
+                <div class="card-body text-center">
 
-                    <div class="text-center mb-4">
-
+                    <div class="profile-pic-container mb-4">
                         {% if picture %}
                             <img src="{{ picture.url }}"
                                  class="img-circle elevation-2"
                                  width="150"
                                  height="150"
-                                 style="object-fit: cover;">
+                                 style="object-fit: cover;"
+                                 id="current-pic">
                         {% else %}
                             <i class="fas fa-user-circle text-secondary"
-                               style="font-size:150px;"></i>
+                               style="font-size:150px;"
+                               id="default-icon"></i>
                         {% endif %}
-
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group text-left">
 
-                        <label>Select a new profile picture</label>
+                        <label class="d-block">Select a new profile picture</label>
 
-                        {{ form.profile_picture }}
+                        <div class="input-group">
+                            <div class="custom-file">
+                                <input type="file"
+                                       name="profile_picture"
+                                       accept="image/jpeg,image/jpg,image/png"
+                                       class="custom-file-input"
+                                       id="profilePicture">
+                                <label class="custom-file-label" for="profilePicture">Choose file</label>
+                            </div>
+                        </div>
 
                         <small class="form-text text-muted">
                             Supported formats: JPG, JPEG, PNG
@@ -50,21 +59,23 @@
 
                 </div>
 
-                <div class="card-footer d-flex justify-content-between">
+                <div class="card-footer">
 
-                    <a href="{{ request.META.HTTP_REFERER|default:'/' }}"
-                       class="btn btn-secondary">
-                        Cancel
-                    </a>
+                    <div class="d-flex justify-content-between">
 
-                    <button type="submit"
-                            class="btn btn-primary">
+                        <a href="{{ request.META.HTTP_REFERER|default:'/' }}"
+                           class="btn btn-default">
+                            <i class="fas fa-times mr-1"></i>
+                            Cancel
+                        </a>
 
-                        <i class="fas fa-upload"></i>
+                        <button type="submit"
+                                class="btn btn-primary">
+                            <i class="fas fa-upload mr-1"></i>
+                            Upload
+                        </button>
 
-                        Upload Picture
-
-                    </button>
+                    </div>
 
                 </div>
 
@@ -75,5 +86,12 @@
     </div>
 
 </div>
+
+<script>
+document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+    var fileName = e.target.files[0].name;
+    e.target.nextElementSibling.innerText = fileName;
+});
+</script>
 
 {% endblock %}
