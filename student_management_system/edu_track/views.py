@@ -10,6 +10,12 @@ from django.utils import timezone
 import csv
 from django.http import HttpResponse
 from .forms import InstructorProfilePictureForm, StudentProfilePictureForm
+from datetime import date
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, Spacer, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
 
 #USER_LOGIN OPERATIONS
 def user_login(request):
@@ -659,6 +665,7 @@ def instructor_profile(request):
         context,
     )
 
+#UPLOAD STUDENT PROFILE PICTURE
 @student_required
 def student_upload_picture(request):
     student = request.user.student
@@ -680,6 +687,7 @@ def student_upload_picture(request):
 
     return render(request, "profile_picture_upload.html", {"form": form, "picture": student.profile_picture} )
 
+#UPLOAD INSTRUCTOR PROFILE PICTURE
 @instructor_required
 def instructor_upload_picture(request):
     instructor = request.user.instructor
@@ -700,3 +708,184 @@ def instructor_upload_picture(request):
         form = InstructorProfilePictureForm(instance=instructor)
 
     return render(request, "profile_picture_upload.html", {"form": form, "picture": instructor.profile_picture})
+
+#EXPORT INDIVIDUAL STUDENT's ATTENDANCE as PDF
+def student_attendance_pdf(request, id):
+
+    student = Student.objects.get(id=id)
+
+    attendances = Attendance.objects.filter(
+        student=student
+    ).order_by("date")
+
+    present = attendances.filter(status="Present").count()
+    absent = attendances.filter(status="Absent").count()
+    total = attendances.count()
+
+    percentage = 0
+    if total > 0:
+        percentage = round((present / total) * 100, 2)
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = (
+        f'attachment; filename="{student.full_name}_attendance_report.pdf"'
+    )
+
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        leftMargin=35,
+        rightMargin=35,
+        topMargin=35,
+        bottomMargin=35,
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = styles["Title"]
+    title_style.alignment = TA_CENTER
+
+    heading_style = styles["Heading2"]
+    heading_style.alignment = TA_CENTER
+
+    normal = styles["Normal"]
+
+    elements = []
+
+    # Header
+
+    elements.append(
+        Paragraph("<b>EDUTRACK</b>", title_style)
+    )
+
+    elements.append(
+        Paragraph(
+            "Student Management System",
+            heading_style,
+        )
+    )
+
+    elements.append(Spacer(1, 20))
+
+    elements.append(
+        Paragraph(
+            "<b>STUDENT ATTENDANCE REPORT</b>",
+            heading_style,
+        )
+    )
+
+    elements.append(Spacer(1, 25))
+
+    # Student Information
+
+    info = [
+        ["Student Name", student.full_name],
+        ["Enrollment Number", student.enrollment_number],
+        ["Course", student.enrolled_course.course_name],
+        ["Generated On", date.today().strftime("%d %B %Y")],
+    ]
+
+    info_table = Table(info, colWidths=[170, 300])
+
+    info_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
+        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+    ]))
+
+    elements.append(info_table)
+
+    elements.append(Spacer(1, 25))
+
+    # Attendance Records
+
+    elements.append(
+        Paragraph("<b>Attendance Records</b>", styles["Heading3"])
+    )
+
+    elements.append(Spacer(1, 10))
+
+    data = [
+        ["Date", "Status"]
+    ]
+
+    for attendance in attendances:
+        data.append([
+            attendance.date.strftime("%d %b %Y"),
+            attendance.status,
+        ])
+
+    attendance_table = Table(
+        data,
+        colWidths=[250, 200],
+    )
+
+    table_style = TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0d6efd")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
+    ])
+
+    # Alternate row colors
+    for row in range(1, len(data)):
+        bg = colors.whitesmoke if row % 2 == 0 else colors.beige
+        table_style.add(
+            "BACKGROUND",
+            (0, row),
+            (-1, row),
+            bg,
+        )
+
+    attendance_table.setStyle(table_style)
+
+    elements.append(attendance_table)
+
+    elements.append(Spacer(1, 25))
+
+    # Summary
+
+    elements.append(
+        Paragraph("<b>Attendance Summary</b>", styles["Heading3"])
+    )
+
+    elements.append(Spacer(1, 10))
+
+    summary = [
+        ["Present Records", str(present)],
+        ["Absent Records", str(absent)],
+        ["Total Records", str(total)],
+        ["Attendance Percentage", f"{percentage}%"],
+    ]
+
+    summary_table = Table(summary, colWidths=[220, 120])
+
+    summary_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
+        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+    ]))
+
+    elements.append(summary_table)
+
+    elements.append(Spacer(1, 30))
+
+    # Footer
+
+    elements.append(
+        Paragraph(
+            "<font color='grey'>Generated by EduTrack</font>",
+            normal,
+        )
+    )
+
+    doc.build(elements)
+
+    return response
+
