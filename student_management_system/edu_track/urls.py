@@ -55,4 +55,5 @@ path("attendance/add/", views.attendance_add, name = "attendance_add"),
 path("attendance/update/<int:id>/", views.attendance_update, name = "attendance_update"),
 path("attendance/delete/<int:id>/", views.attendance_delete, name = "attendance_delete"),
 path("student/my-attendance/", views.student_attendance, name = "student_attendance"),
+path("student/<int:id>/attendance-report/", views.student_attendance_pdf, name="student_attendance_pdf"),
 ]
