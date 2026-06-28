@@ -274,6 +274,11 @@
                 <span class="badge badge-success">
                     {{ attendance.count }} Record{{ attendance.count|pluralize }}
                 </span>
+                    <a href="{% url 'student_attendance_pdf' student.id %}"
+                    class="btn btn-danger">
+                    <i class="fas fa-file-pdf"></i>
+                    Attendance Report
+                </a>
             </div>
 
         </div>
