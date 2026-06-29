@@ -49,6 +49,7 @@ path("result/add/", views.result_add, name = "result_add"),
 path("result/update/<int:id>/", views.result_update, name = "result_update"),
 path("result/delete/<int:id>/", views.result_delete, name = "result_delete"),
 path("student/my-result/", views.student_result, name = "student_result"),
+path("student/<int:id>/result-report/", views.student_result_pdf, name="student_result_pdf"),
 
 path("attendance/", views.list_attendance, name = "attendance_list"),
 path("attendance/add/", views.attendance_add, name = "attendance_add"),
