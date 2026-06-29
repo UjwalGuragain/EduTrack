@@ -355,6 +355,11 @@
                 <span class="badge badge-info">
                     {{ result.count }} Result{{ result.count|pluralize }}
                 </span>
+                <a href="{% url 'student_result_pdf' student.id %}"
+                    class="btn btn-danger">
+                    <i class="fas fa-file-pdf"></i>
+                    Result Report
+                </a>
             </div>
 
         </div>
