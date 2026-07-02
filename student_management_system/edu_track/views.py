@@ -357,7 +357,7 @@ def list_students(request):
 #Add new students
 @instructor_required
 def student_add(request):
-    users = User.objects.filter(student__isnull=True)
+    users = User.objects.filter(student__isnull=True, instructor__isnull=True, is_superuser=False)
     courses = Course.objects.all()
 
     if request.method == "POST":
@@ -390,7 +390,7 @@ def student_add(request):
 #Update students
 @instructor_required
 def student_update(request, id):
-    users = User.objects.filter(student__isnull=True)
+    users = User.objects.filter(student__isnull=True, instructor__isnull=True, is_superuser=False)
     student = Student.objects.get(id=id)
     courses = Course.objects.all()
 
