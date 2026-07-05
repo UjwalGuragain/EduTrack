@@ -45,3 +45,45 @@ def instructor_api(request):
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+   
+@api_view(["GET", "POST"])
+def course_api(request):
+
+    if request.method == "GET":
+
+        courses = Course.objects.all()
+        serializer = CourseSerializer(courses, many = True)
+
+        return Response(serializer.data, status = status.HTTP_200_OK)
+    
+    elif request.method == "POST":
+
+        serializer = CourseSerializer(data = request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET", "POST"])
+def module_api(request):
+
+    if request.method == "GET":
+        
+        modules = Module.objects.all()
+        serializer = ModuleSerializer(modules, many = True)
+
+        return Response(serializer.data, status = status.HTTP_200_OK)
+    
+    elif request.method == "POST":
+
+        serializer = ModuleSerializer(data = request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
