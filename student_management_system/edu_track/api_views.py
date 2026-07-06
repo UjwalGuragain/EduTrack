@@ -87,3 +87,45 @@ def module_api(request):
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET", "POST"])
+def attendance_api(request):
+
+    if request.method == "GET":
+
+        attendances = Attendance.objects.all()
+        serializer = AttendanceSerializer(attendances, many = True)
+
+        return Response(serializer.data, status = status.HTTP_200_OK)
+    
+    elif request.method == "POST":
+
+        serializer = AttendanceSerializer(data = request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET", "POST"])
+def result_api(request):
+
+    if request.method == "GET":
+
+        results = Result.objects.all()
+        serializer = ResultSerializer(results, many = True)
+
+        return Response(serializer.data, status = status.HTTP_200_OK)
+    
+    elif request.method == "POST":
+
+        serializer = ResultSerializer(data = request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
