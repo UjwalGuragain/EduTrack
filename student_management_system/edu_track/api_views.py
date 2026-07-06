@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view
 from .models import *
 from .serializers import *
 from rest_framework import status
+from django.shortcuts import get_object_or_404
 
 @api_view(["GET", "POST"])
 def student_api(request):
@@ -129,3 +130,41 @@ def result_api(request):
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+    
+@api_view(["GET", "PUT", "PATCH", "DELETE"])
+def student_detail_api(request, id):
+
+    student = get_object_or_404(Student, id=id)
+
+    if request.method == "GET":
+
+        serializer = StudentSerializer(student, many = False)
+
+        return Response(serializer.data, status = status.HTTP_200_OK)
+    
+    elif request.method == "PATCH":
+
+        serializer = StudentSerializer(student, data = request.data, partial = True)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == "PUT":
+
+        serializer = StudentSerializer(student, data = request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        
+    elif request.method == "DELETE":
+        student.delete()
+
+        return Response(status = status.HTTP_204_NO_CONTENT)
