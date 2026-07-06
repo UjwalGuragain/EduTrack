@@ -1,9 +1,10 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from . import api_views
 
 urlpatterns = [
-
+    #Website
 path("", views.user_login, name = "login"),
 path("login/", views.user_login, name = "login"),
 path("register/", views.user_register, name = "register"),
@@ -57,4 +58,12 @@ path("attendance/update/<int:id>/", views.attendance_update, name = "attendance_
 path("attendance/delete/<int:id>/", views.attendance_delete, name = "attendance_delete"),
 path("student/my-attendance/", views.student_attendance, name = "student_attendance"),
 path("student/<int:id>/attendance-report/", views.student_attendance_pdf, name="student_attendance_pdf"),
+
+    #APIs
+path("api/students/", api_views.student_api, name = "student_api"),
+path("api/instructors/", api_views.instructor_api, name = "instructor_api"),
+path("api/courses/", api_views.course_api, name = "course_api"),
+path("api/modules/", api_views.module_api, name = "module_api"),
+path("api/attendances/", api_views.attendance_api, name = "attendance_api"),
+path("api/results/", api_views.result_api, name = "result_api"),
 ]
