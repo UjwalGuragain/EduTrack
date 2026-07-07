@@ -282,3 +282,41 @@ def course_detail_api(request, id):
         course.delete()
 
         return Response(status = status.HTTP_204_NO_CONTENT)
+    
+@api_view(["GET", "PUT", "PATCH", "DELETE"])
+def result_detail_api(request, id):
+
+    result = get_object_or_404(Result, id=id)
+
+    if request.method == "GET":
+
+        serializer = ResultSerializer(result, many = False)
+
+        return Response(serializer.data, status = status.HTTP_200_OK)
+    
+    elif request.method == "PATCH":
+
+        serializer = ResultSerializer(result, data = request.data, partial = True)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == "PUT":
+
+        serializer = ResultSerializer(result, data = request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        
+    elif request.method == "DELETE":
+        result.delete()
+
+        return Response(status = status.HTTP_204_NO_CONTENT)
