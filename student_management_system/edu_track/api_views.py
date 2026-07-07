@@ -168,3 +168,42 @@ def student_detail_api(request, id):
         student.delete()
 
         return Response(status = status.HTTP_204_NO_CONTENT)
+
+@api_view(["GET", "PUT", "PATCH", "DELETE"])
+def module_detail_api(request, id):
+
+    module = get_object_or_404(Module, id=id)
+
+    if request.method == "GET":
+
+        serializer = ModuleSerializer(module, many = False)
+
+        return Response(serializer.data, status = status.HTTP_200_OK)
+    
+    elif request.method == "PATCH":
+
+        serializer = ModuleSerializer(module, data = request.data, partial = True)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == "PUT":
+
+        serializer = ModuleSerializer(module, data = request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        
+    elif request.method == "DELETE":
+        module.delete()
+
+        return Response(status = status.HTTP_204_NO_CONTENT)
+    
