@@ -207,3 +207,40 @@ def module_detail_api(request, id):
 
         return Response(status = status.HTTP_204_NO_CONTENT)
     
+@api_view(["GET", "PUT", "PATCH", "DELETE"])
+def attendance_detail_api(request, id):
+
+    attendance = get_object_or_404(Attendance, id=id)
+
+    if request.method == "GET":
+
+        serializer = AttendanceSerializer(attendance, many = False)
+
+        return Response(serializer.data, status = status.HTTP_200_OK)
+    
+    elif request.method == "PATCH":
+
+        serializer = AttendanceSerializer(attendance, data = request.data, partial = True)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == "PUT":
+
+        serializer = AttendanceSerializer(attendance, data = request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        
+    elif request.method == "DELETE":
+        attendance.delete()
+
+        return Response(status = status.HTTP_204_NO_CONTENT)
