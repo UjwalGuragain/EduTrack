@@ -11,6 +11,8 @@ def student_api(request):
     
     if request.method == "GET":
 
+        course = request.GET.get("Enrolled_course_id")
+        
         ordering = request.GET.get("ordering")
         page = int(request.GET.get("page", 1))
         page_size = 10
@@ -19,15 +21,18 @@ def student_api(request):
         students = Student.objects.all()
         search = request.GET.get("search", "")
 
-        if ordering:
-            students = students.order_by(ordering)
-
         if search:
             students = students.filter(
             Q(full_name__icontains = search) |
             Q(email__icontains = search) |
             Q(enrollment_number__icontains = search)
             )
+
+        if course:
+            students.filter(course=course)
+
+        if ordering:
+            students = students.order_by(ordering)
 
         students = students[start:end]
 
