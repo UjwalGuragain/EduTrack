@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'edu_track',
     'rest_framework',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -136,3 +137,9 @@ EMAIL_HOST_PASSWORD = str(os.getenv('EMAIL_PASSWORD'))
 
 from datetime import timedelta
 PASSWORD_RESET_TIMEOUT = 300
+
+REST_FRAMEWORK = {
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+    ]
+}
