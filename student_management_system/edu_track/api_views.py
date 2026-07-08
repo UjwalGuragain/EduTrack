@@ -4,13 +4,33 @@ from .models import *
 from .serializers import *
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 @api_view(["GET", "POST"])
 def student_api(request):
     
     if request.method == "GET":
 
+        ordering = request.GET.get("ordering")
+        page = int(request.GET.get("page", 1))
+        page_size = 10
+        start = (page-1) * page_size
+        end = start + page_size
         students = Student.objects.all()
+        search = request.GET.get("search", "")
+
+        if ordering:
+            students = students.order_by(ordering)
+
+        if search:
+            students = students.filter(
+            Q(full_name__icontains = search) |
+            Q(email__icontains = search) |
+            Q(enrollment_number__icontains = search)
+            )
+
+        students = students[start:end]
+
         serializer = StudentSerializer(students, many = True)
        
         return Response(serializer.data, status = status.HTTP_200_OK)
