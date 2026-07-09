@@ -5,7 +5,9 @@ from .serializers import *
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from rest_framework import generics
 
+#FUNCTION BASED API VIEWS
 @api_view(["GET", "POST"])
 def student_api(request):
     
@@ -345,3 +347,16 @@ def result_detail_api(request, id):
         result.delete()
 
         return Response(status = status.HTTP_204_NO_CONTENT)
+
+#GENERIC API VIEWS
+class InstructorGenericAPI(generics.ListCreateAPIView):
+    queryset = Instructor.objects.all()
+    serializer_class = InstructorSerializer
+
+class StudentGenericAPI(generics.ListCreateAPIView):
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
+
+class StudentDetailGenericAPI(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
