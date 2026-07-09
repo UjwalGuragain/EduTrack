@@ -59,12 +59,16 @@ path("attendance/delete/<int:id>/", views.attendance_delete, name = "attendance_
 path("student/my-attendance/", views.student_attendance, name = "student_attendance"),
 path("student/<int:id>/attendance-report/", views.student_attendance_pdf, name="student_attendance_pdf"),
 
-    #APIs
+    #Function-Based APIs
 path("api/students/", api_views.student_api, name = "student_api"),
 path("api/instructors/", api_views.instructor_api, name = "instructor_api"),
 path("api/courses/", api_views.course_api, name = "course_api"),
 path("api/modules/", api_views.module_api, name = "module_api"),
 path("api/attendances/", api_views.attendance_api, name = "attendance_api"),
 path("api/results/", api_views.result_api, name = "result_api"),
-path("api/students/<int:id>/", api_views.student_detail_api, name = "student_detail_api")
+path("api/students/<int:id>/", api_views.student_detail_api, name = "student_detail_api"),
+    #Generic APIs
+path("api/instructors-generic/", api_views.InstructorGenericAPI.as_view(), name = "instructor_generic"),
+path("api/students-generic/", api_views.StudentGenericAPI.as_view(), name = "student_generic"),
+path("api/students-generic/<int:pk>/", api_views.StudentDetailGenericAPI.as_view(), name = "student_detail_generic"),
 ]
