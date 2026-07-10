@@ -360,3 +360,11 @@ class StudentGenericAPI(generics.ListCreateAPIView):
 class StudentDetailGenericAPI(generics.RetrieveUpdateDestroyAPIView):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
+
+class ModuleGenericAPI(generics.ListCreateAPIView):
+    queryset = Module.objects.all()
+    serializer_class = ModuleSerializer
+
+class ModuleDetailGenericAPI(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Module.objects.all()
+    serializer_class = ModuleSerializer
