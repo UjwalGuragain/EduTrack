@@ -368,3 +368,11 @@ class ModuleGenericAPI(generics.ListCreateAPIView):
 class ModuleDetailGenericAPI(generics.RetrieveUpdateDestroyAPIView):
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
+
+class ResultGenericAPI(generics.ListCreateAPIView):
+    queryset = Result.objects.all()
+    serializer_class = ResultSerializer
+
+class ResultDetailGenericAPI(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Result.objects.all()
+    serializer_class = ResultSerializer
