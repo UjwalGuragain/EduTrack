@@ -73,4 +73,6 @@ path("api/students-generic/", api_views.StudentGenericAPI.as_view(), name = "stu
 path("api/students-generic/<int:pk>/", api_views.StudentDetailGenericAPI.as_view(), name = "student_detail_generic"),
 path("api/modules-generic/", api_views.ModuleGenericAPI.as_view(), name = "module_generic"),
 path("api/modules-generic/<int:pk>/", api_views.ModuleDetailGenericAPI.as_view(), name = "module_detail_generic"),
+path("api/results-generic/", api_views.ResultGenericAPI.as_view(), name = "result_generic"),
+path("api/results-generic/<int:pk>/", api_views.ResultDetailGenericAPI.as_view(), name = "result_detail_generic"),
 ]
