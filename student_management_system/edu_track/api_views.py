@@ -376,3 +376,11 @@ class ResultGenericAPI(generics.ListCreateAPIView):
 class ResultDetailGenericAPI(generics.RetrieveUpdateDestroyAPIView):
     queryset = Result.objects.all()
     serializer_class = ResultSerializer
+
+class CourseGenericAPI(generics.ListCreateAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+
+class CourseDetailGenericAPI(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
