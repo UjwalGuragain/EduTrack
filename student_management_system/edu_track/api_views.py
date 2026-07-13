@@ -384,3 +384,11 @@ class CourseGenericAPI(generics.ListCreateAPIView):
 class CourseDetailGenericAPI(generics.RetrieveUpdateDestroyAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+
+class AttendanceGenericAPI(generics.ListCreateAPIView):
+    queryset = Attendance.objects.all()
+    serializer_class = AttendanceSerializer
+
+class AttendanceDetailGenericAPI(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Attendance.objects.all()
+    serializer_class = AttendanceSerializer
