@@ -77,4 +77,6 @@ path("api/results-generic/", api_views.ResultGenericAPI.as_view(), name = "resul
 path("api/results-generic/<int:pk>/", api_views.ResultDetailGenericAPI.as_view(), name = "result_detail_generic"),
 path("api/courses-generic/", api_views.CourseGenericAPI.as_view(), name = "course_generic"),
 path("api/courses-generic/<int:pk>/", api_views.CourseDetailGenericAPI.as_view(), name = "course_detail_generic"),
+path("api/attendances-generic/", api_views.AttendanceGenericAPI.as_view(), name = "attendance_generic"),
+path("api/attendances-generic/<int:pk>/", api_views.AttendanceDetailGenericAPI.as_view(), name = "attendance_detail_generic"),
 ]
