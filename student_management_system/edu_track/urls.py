@@ -8,7 +8,11 @@ from .api_views import *
 router = DefaultRouter()
 
 router.register("students", StudentViewSet)
-
+router.register("instructors", InstructorViewSet)
+router.register("courses", CourseViewSet)
+router.register("modules", ModuleViewSet)
+router.register("attendances", AttendanceViewSet)
+router.register("results", ResultViewSet)
 
 urlpatterns = [
 path("api/v1/", include(router.urls)),
