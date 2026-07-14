@@ -397,3 +397,23 @@ class AttendanceDetailGenericAPI(generics.RetrieveUpdateDestroyAPIView):
 class StudentViewSet(ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
+
+class InstructorViewSet(ModelViewSet):
+    queryset = Instructor.objects.all()
+    serializer_class = InstructorSerializer
+
+class CourseViewSet(ModelViewSet):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+
+class ModuleViewSet(ModelViewSet):
+    queryset = Module.objects.all()
+    serializer_class = ModuleSerializer
+
+class AttendanceViewSet(ModelViewSet):
+    queryset = Attendance.objects.all()
+    serializer_class = AttendanceSerializer
+
+class ResultViewSet(ModelViewSet):
+    queryset = Result.objects.all()
+    serializer_class = ResultSerializer
