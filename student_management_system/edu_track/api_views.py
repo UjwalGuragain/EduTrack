@@ -5,7 +5,8 @@ from .serializers import *
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from rest_framework import generics
+from rest_framework import generics, mixins
+from rest_framework.viewsets import ModelViewSet
 
 #FUNCTION BASED API VIEWS
 @api_view(["GET", "POST"])
@@ -392,3 +393,7 @@ class AttendanceGenericAPI(generics.ListCreateAPIView):
 class AttendanceDetailGenericAPI(generics.RetrieveUpdateDestroyAPIView):
     queryset = Attendance.objects.all()
     serializer_class = AttendanceSerializer
+
+class StudentViewSet(ModelViewSet):
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
