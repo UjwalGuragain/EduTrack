@@ -18,6 +18,18 @@ class StudentSerializer(serializers.ModelSerializer):
         model = Student
         fields = "__all__"
 
+class StudentHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Student
+        fields = [
+            "url",
+            "full_name",
+            "email",
+            "contact_number",
+            "enrollment_number"
+            "enrolled_course"
+        ]
+
 class ModuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Module
