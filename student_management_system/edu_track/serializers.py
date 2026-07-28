@@ -26,7 +26,7 @@ class StudentHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
             "full_name",
             "email",
             "contact_number",
-            "enrollment_number"
+            "enrollment_number",
             "enrolled_course"
         ]
 
