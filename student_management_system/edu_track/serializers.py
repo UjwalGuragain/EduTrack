@@ -12,12 +12,25 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class StudentSerializer(serializers.ModelSerializer):
-    enrolled_course = CourseSerializer(read_only = True)
+    enrolled_course = CourseSerializer(read_only = False)
 
     class Meta:
         model = Student
         fields = "__all__"
 
+    def create(self, validated_data):
+        course_data = validated_data.pop("enrolled_course")
+
+        course, created = Course.objects.get_or_create(
+            course_name = course_data["course_name"],
+            course_duration = course_data["course_duration"],
+            course_code = course_data["course_code"]
+        )
+
+        student = Student.objects.create(**validated_data, enrolled_course = course,)
+
+        return student
+    
 class StudentHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Student
