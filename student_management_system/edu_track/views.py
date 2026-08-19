@@ -50,7 +50,7 @@ def user_register(request):
             messages.error(request, "Passwords do not match")
             return redirect("register")
         if len(password) < 9:
-            messages.error(request, "Passwords must be of atleast 8 characters")
+            messages.error(request, "Passwords must be of at least 8 characters")
             return redirect("register")
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username already exists")
@@ -437,13 +437,13 @@ def module_add(request):
     course = Course.objects.all()
     if request.method == "POST":
         module_name = request.POST.get("module_name")
-        module_code = request.POST.get("mdoule_code")
+        module_code = request.POST.get("module_code")
         full_marks = request.POST.get("full_marks")
         courses = Course.objects.get(id = request.POST.get("courses"))
 
         Module.objects.create(
             module_name = module_name,
-            mdoule_code = module_code,
+            module_code = module_code,
             full_marks = full_marks,
             courses = courses
         )
