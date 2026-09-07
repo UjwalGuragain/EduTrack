@@ -19,51 +19,67 @@ from reportlab.lib.styles import getSampleStyleSheet
 
 #USER_LOGIN OPERATIONS
 def user_login(request):
+    if request.user.is_authenticated:
+        if hasattr(request.user, "student"):
+            return redirect("student_dashboard")
+        elif hasattr(request.user, "instructor"):
+            return redirect("instructor_dashboard")
+
     if request.method == "POST":
-        username = request.POST["username"]
-        password = request.POST["password"]
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
 
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
             login(request, user)  
-        if hasattr(user, "student"):
-            return redirect("student_dashboard")
-        elif hasattr(user, "instructor"):
-            return redirect("instructor_dashboard")
+            if hasattr(user, "student"):
+                return redirect("student_dashboard")
+            elif hasattr(user, "instructor"):
+                return redirect("instructor_dashboard")
+            else:
+                messages.warning(request, "Account is not linked to a Student or Instructor profile.")
+                return redirect("login")
         else:
-            messages.error(request, "Invalid credentials or Account not linked to Student or Instructor profile")
+            messages.error(request, "Invalid username or password.")
             return redirect("login")
 
     return render(request, "edu_track/registration/login.html")
 
 #USER_REGISTER OPERATIONS
 def user_register(request):
-    if request.method == "POST":
-        print(request.POST)
-        username = request.POST["username"]
-        email = request.POST["email"]
-        password = request.POST["password1"]
-        confirm_password = request.POST["password2"]
+    if request.user.is_authenticated:
+        if hasattr(request.user, "student"):
+            return redirect("student_dashboard")
+        elif hasattr(request.user, "instructor"):
+            return redirect("instructor_dashboard")
 
-        if password != confirm_password:
-            messages.error(request, "Passwords do not match")
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
+        password = request.POST.get("password1", "")
+        confirm_password = request.POST.get("password2", "")
+
+        if not username:
+            messages.error(request, "Username is required.")
             return redirect("register")
-        if len(password) < 9:
-            messages.error(request, "Passwords must be of at least 8 characters")
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            return redirect("register")
+        if len(password) < 8:
+            messages.error(request, "Passwords must be at least 8 characters.")
             return redirect("register")
         if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already exists")
+            messages.error(request, "Username already exists.")
             return redirect("register")
 
-        user = User.objects.create_user(
+        User.objects.create_user(
             username=username,
             email=email,
             password=password
         )
-        user.save()
        
-        messages.success(request, "Account created successfully!")
+        messages.success(request, "Account created successfully! Please sign in.")
         return redirect("login")
 
     return render(request, "edu_track/registration/register.html")
@@ -85,11 +101,11 @@ def password_reset(request):
 #RENDER INSTRUCTOR DASHBOARD
 @instructor_required
 def instructor_dashboard(request):
-    if not hasattr(request.user,"instructor"):
+    if not hasattr(request.user, "instructor"):
         return redirect("login")
     
-    present_count = Attendance.objects.filter(status = "Present").count()
-    absent_count = Attendance.objects.filter(status = "Absent").count()
+    present_count = Attendance.objects.filter(status="Present").count()
+    absent_count = Attendance.objects.filter(status="Absent").count()
     total_attendance = Attendance.objects.count()
     attendance_percentage = (
         (present_count / total_attendance) * 100
@@ -98,51 +114,54 @@ def instructor_dashboard(request):
 
     today = timezone.now().date()
     students_this_month = Student.objects.filter(
-    enrollment_date__month=today.month,
-    enrollment_date__year=today.year).count()
+        enrollment_date__month=today.month,
+        enrollment_date__year=today.year
+    ).count()
 
     attendance_today = Attendance.objects.filter(date=today).count()
-    results_this_week = Result.objects.filter(id__isnull=False).order_by("-id")[:7].count()
-    students_without_attendance = Student.objects.exclude(attendance__isnull=False).count()
-    students_without_results = Student.objects.exclude(result__isnull=False).count()
-    courses_without_modules = Course.objects.exclude(module__isnull=True).count()
+    start_of_week = today - timezone.timedelta(days=today.weekday())
+    attendance_this_week = Attendance.objects.filter(date__gte=start_of_week, date__lte=today).count()
+    results_this_week = Result.objects.count()
+    students_without_attendance = Student.objects.filter(attendance__isnull=True).distinct().count()
+    students_without_results = Student.objects.filter(result__isnull=True).distinct().count()
+    courses_without_modules = Course.objects.filter(module__isnull=True).distinct().count()
 
     instructor = request.user.instructor
     context = {
-        "instructor" : instructor,
-        "recent_results" : Result.objects.order_by("-id")[:5],
-        "recent_students": Student.objects.order_by("-id")[:5],
+        "instructor": instructor,
+        "recent_results": Result.objects.select_related("student", "module").order_by("-id")[:5],
+        "recent_students": Student.objects.select_related("enrolled_course").order_by("-id")[:5],
         "student_count": Student.objects.count(),
         "course_count": Course.objects.count(),
         "module_count": Module.objects.count(),
-        "result_count" : Result.objects.count(),
-        "present_count" : present_count,
-        "absent_count" : absent_count,
-        "recent_attendance" : Attendance.objects.order_by("-id")[:5],
-        "attendance_percentage" : round(attendance_percentage, 2),
+        "result_count": Result.objects.count(),
+        "present_count": present_count,
+        "absent_count": absent_count,
+        "recent_attendance": Attendance.objects.select_related("student").order_by("-date", "-id")[:5],
+        "attendance_percentage": round(attendance_percentage, 2),
         "students_this_month": students_this_month,
         "attendance_today": attendance_today,
+        "attendance_this_week": attendance_this_week,
         "results_this_week": results_this_week,
         "students_without_attendance": students_without_attendance,
         "students_without_results": students_without_results,
         "courses_without_modules": courses_without_modules,
-        
     }
     return render(request, "edu_track/dashboards/instructor_dashboard.html", context)
 
 #RENDER STUDENT DASHBOARD
 @student_required
 def student_dashboard(request):
-    if not hasattr(request.user,"student"):
+    if not hasattr(request.user, "student"):
         return redirect("login")
     
     student = request.user.student
-    course = Course.objects.filter(student=student)
-    result = Result.objects.filter(student=student).select_related("module")
+    course = Course.objects.filter(id=student.enrolled_course_id) if student.enrolled_course else Course.objects.none()
+    result = Result.objects.filter(student=student).select_related("module").order_by("-id")
     result_count = Result.objects.filter(student=student).count()
-    attendance = Attendance.objects.filter(student=student).order_by("-date")
-    present_count = Attendance.objects.filter(student=student).filter(status = "Present").count()
-    absent_count = Attendance.objects.filter(student=student).filter(status = "Absent").count()
+    attendance = Attendance.objects.filter(student=student).order_by("-date", "-id")
+    present_count = Attendance.objects.filter(student=student, status="Present").count()
+    absent_count = Attendance.objects.filter(student=student, status="Absent").count()
     total_attendance = Attendance.objects.filter(student=student).count()
     attendance_percentage = (
         (present_count / total_attendance) * 100
@@ -150,14 +169,14 @@ def student_dashboard(request):
     )
 
     context = {
-        "enrolled_course" : course,
-        "present_count" : present_count,
-        "absent_count" : absent_count,
-        "attendance_percentage" : round(attendance_percentage, 2),
-        "recent_attendance" : attendance[:5],
-        "student" : student,
-        "result_count" : result_count,
-        "recent_result" : result[:5]
+        "enrolled_course": course,
+        "present_count": present_count,
+        "absent_count": absent_count,
+        "attendance_percentage": round(attendance_percentage, 2),
+        "recent_attendance": attendance[:5],
+        "student": student,
+        "result_count": result_count,
+        "recent_result": result[:5]
     }
     return render(request, "edu_track/dashboards/student_dashboard.html", context)
 
@@ -167,7 +186,7 @@ def student_profile(request):
     student = request.user.student
 
     context = {
-        "student" : student
+        "student": student
     }
     return render(request, "edu_track/dashboards/my_profile.html", context)
 
@@ -175,23 +194,24 @@ def student_profile(request):
 @student_required
 def student_course(request):
     student = request.user.student
-    course = Course.objects.filter(student=student)
+    course = Course.objects.filter(id=student.enrolled_course_id) if student.enrolled_course else Course.objects.none()
 
     context = {
-        "student" : student,
-        "enrolled_course" : course
+        "student": student,
+        "enrolled_course": course
     }
     return render(request, "edu_track/dashboards/my_course.html", context)
 
-#STUDENT MOUDLE
+#STUDENT MODULE
 @student_required
 def student_module(request):
     student = request.user.student
-    module = Result.objects.filter(student=student).select_related("module")
+    modules = Module.objects.filter(courses=student.enrolled_course).select_related("courses").order_by("module_code") if student.enrolled_course else Module.objects.none()
 
     context = {
-        "student" : student,
-        "module" : module
+        "student": student,
+        "modules": modules,
+        "module": modules,
     }
     return render(request, "edu_track/dashboards/my_module.html", context)
 
@@ -199,10 +219,10 @@ def student_module(request):
 @student_required
 def student_attendance(request):
     student = request.user.student
-    attendance = Attendance.objects.filter(student=student)
-    present_count = Attendance.objects.filter(student=student).filter(status = "Present").count()
-    absent_count = Attendance.objects.filter(student=student).filter(status = "Absent").count()
-    total_attendance = Attendance.objects.filter(student=student).count()
+    attendance = Attendance.objects.filter(student=student).order_by("-date", "-id")
+    present_count = attendance.filter(status="Present").count()
+    absent_count = attendance.filter(status="Absent").count()
+    total_attendance = attendance.count()
     attendance_percentage = (
         (present_count / total_attendance) * 100
         if total_attendance else 0
@@ -211,13 +231,13 @@ def student_attendance(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
     context = {
-        "present_count" : present_count,
-        "absent_count" : absent_count,
-        "attendance_percentage" : round(attendance_percentage, 2),
-        "student" : student,
-        "attendance" : page_obj,
-        "page_obj" : page_obj,
-        "total_attendance" : total_attendance
+        "present_count": present_count,
+        "absent_count": absent_count,
+        "attendance_percentage": round(attendance_percentage, 2),
+        "student": student,
+        "attendance": page_obj,
+        "page_obj": page_obj,
+        "total_attendance": total_attendance
     }
     return render(request, "edu_track/dashboards/my_attendance.html", context)
 
@@ -225,7 +245,7 @@ def student_attendance(request):
 @student_required
 def student_result(request):
     student = request.user.student
-    result = Result.objects.filter(student=student).select_related("module")
+    result = Result.objects.filter(student=student).select_related("module").order_by("module__module_name", "id")
     marks = [float(r.obtained_marks) for r in result]
     average_marks = (
         round(sum(marks) / len(marks), 2)
@@ -241,28 +261,39 @@ def student_result(request):
 
     context = {
         "average_marks": average_marks,
-        "highest_marks" : highest_marks,
-        "lowest_marks" : lowest_marks,
-        "student" : student,
-        "result" : page_obj,
-        "page_obj" : page_obj,
-        "result_count" : result_count
+        "highest_marks": highest_marks,
+        "lowest_marks": lowest_marks,
+        "student": student,
+        "result": page_obj,
+        "page_obj": page_obj,
+        "result_count": result_count
     }
     return render(request, "edu_track/dashboards/my_result.html", context)
 
 #Display overall details of the student
 @instructor_required
 def student_detail(request, id):
-    student = get_object_or_404(Student, id=id)
-    attendance = Attendance.objects.filter(student=student).order_by("-date")
-    result = Result.objects.filter(student=student).select_related("module").order_by("module__module_name")
-    present_count = attendance.filter(status = "Present").count()
-    absent_count = attendance.filter(status = "Absent").count()
+    student = get_object_or_404(Student.objects.select_related("enrolled_course", "user"), id=id)
+    attendance = Attendance.objects.filter(student=student).order_by("-date", "-id")
+    result = Result.objects.filter(student=student).select_related("module").order_by("module__module_name", "id")
+    present_count = attendance.filter(status="Present").count()
+    absent_count = attendance.filter(status="Absent").count()
     total_attendance = attendance.count()
     attendance_percentage = (
         (present_count / total_attendance) * 100
         if total_attendance else 0
     )
+
+    context = {
+        "student": student,
+        "result": result,
+        "attendance": attendance,
+        "present_count": present_count,
+        "absent_count": absent_count,
+        "attendance_percentage": round(attendance_percentage, 2)
+    }
+
+    return render(request, "edu_track/students/student_detail.html", context)
 
     context = {
         "student" : student,
@@ -440,14 +471,14 @@ def student_delete(request, id):
 #Fetch all modules from Database and Sent it to template
 @instructor_required
 def list_modules(request):
-    module = Module.objects.all().order_by("id")
-    paginator = Paginator(module, 10)
+    modules = Module.objects.select_related("courses").order_by("id")
+    paginator = Paginator(modules, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
     
     context = {
-        "modules" : page_obj,
-        "page_obj" : page_obj
+        "modules": page_obj,
+        "page_obj": page_obj
     }
     return render(request, "edu_track/modules/module_list.html", context)
 
@@ -773,8 +804,18 @@ def instructor_upload_picture(request):
 
 #EXPORT INDIVIDUAL STUDENT's ATTENDANCE as PDF
 def student_attendance_pdf(request, id):
+    if not request.user.is_authenticated:
+        return redirect("login")
 
-    student = Student.objects.get(id=id)
+    student = get_object_or_404(Student, id=id)
+
+    if hasattr(request.user, "student"):
+        if request.user.student.id != student.id:
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+    elif not hasattr(request.user, "instructor") and not request.user.is_superuser:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
 
     attendances = Attendance.objects.filter(
         student=student
@@ -953,8 +994,18 @@ def student_attendance_pdf(request, id):
 
 #EXPORT INDIVIDUAL STUDENT's RESULT as PDF
 def student_result_pdf(request, id):
+    if not request.user.is_authenticated:
+        return redirect("login")
 
-    student = Student.objects.get(id=id)
+    student = get_object_or_404(Student, id=id)
+
+    if hasattr(request.user, "student"):
+        if request.user.student.id != student.id:
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+    elif not hasattr(request.user, "instructor") and not request.user.is_superuser:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
 
     results = Result.objects.filter(
         student=student

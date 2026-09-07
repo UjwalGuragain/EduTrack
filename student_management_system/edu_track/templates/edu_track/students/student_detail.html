@@ -139,7 +139,7 @@
                     </span>
 
                     <span class="info-box-number">
-                        {{ results.count }}
+                        {{ result.count }}
                     </span>
 
                 </div>
@@ -372,28 +372,28 @@
 
                 <thead>
                     <tr>
-                        <th>Module</th>
-                        <th>Module</th>
+                        <th>Module Code</th>
+                        <th>Module Name</th>
                         <th>Obtained Marks</th>
                     </tr>
                 </thead>
 
                 <tbody>
 
-                    {% for result in result %}
+                    {% for res in result %}
 
                     <tr>
 
                         <td>
-                            {{ result.module.module_code }}
+                            {{ res.module.module_code }}
                         </td>
 
                         <td>
-                            {{ result.module.module_name }}
+                            {{ res.module.module_name }}
                         </td>
 
                         <td>
-                            {{ result.obtained_marks }}
+                            {{ res.obtained_marks }}
                         </td>
 
                     </tr>

@@ -14,25 +14,27 @@
             </div>
 
             <div class="card-body">
-                {% if module %}
+                {% if modules or module %}
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
                             <th>Module Code</th>
                             <th>Module Name</th>
+                            <th>Full Marks</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for record in module %}
+                        {% for mod in modules|default:module %}
                         <tr>
-                            <td>{{ record.module.module_code }}</td>
-                            <td>{{ record.module.module_name }}</td>
+                            <td>{{ mod.module_code }}</td>
+                            <td>{{ mod.module_name }}</td>
+                            <td>{{ mod.full_marks }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
                 {% else %}
-                <p>No modules available.</p>
+                <p>No modules available for your course.</p>
                 {% endif %}
             </div>
         </div>
