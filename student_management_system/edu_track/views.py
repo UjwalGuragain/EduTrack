@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -253,9 +253,9 @@ def student_result(request):
 #Display overall details of the student
 @instructor_required
 def student_detail(request, id):
-    student = Student.objects.get(id=id)
-    attendance = Attendance.objects.filter(student=student)
-    result = Result.objects.filter(student=student).select_related("module")
+    student = get_object_or_404(Student, id=id)
+    attendance = Attendance.objects.filter(student=student).order_by("-date")
+    result = Result.objects.filter(student=student).select_related("module").order_by("module__module_name")
     present_count = attendance.filter(status = "Present").count()
     absent_count = attendance.filter(status = "Absent").count()
     total_attendance = attendance.count()
@@ -278,7 +278,7 @@ def student_detail(request, id):
 #Fetch all courses from Database and Send it to template
 @instructor_required
 def list_courses(request):
-    courses = Course.objects.all()
+    courses = Course.objects.all().order_by("id")
     paginator = Paginator(courses, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -293,7 +293,6 @@ def list_courses(request):
 #Add new courses
 @instructor_required
 def course_add(request):
-    print(request.user)
     if request.method == "POST":
         code = request.POST.get("course_code")
         name = request.POST.get("course_name")
@@ -312,7 +311,7 @@ def course_add(request):
 #Update courses
 @instructor_required
 def course_update(request, id):
-    course = Course.objects.get(id=id)
+    course = get_object_or_404(Course, id=id)
 
     if request.method == "POST":
         course.course_code = request.POST.get("course_code")
@@ -327,7 +326,7 @@ def course_update(request, id):
 #Delete courses
 @instructor_required
 def course_delete(request, id):
-    course = Course.objects.get(id=id)
+    course = get_object_or_404(Course, id=id)
     course.delete()
     return redirect("course_list")
 
@@ -336,22 +335,25 @@ def course_delete(request, id):
 @instructor_required
 def list_students(request):
     search = request.GET.get("search", "")
-    students = Student.objects.all()
+    students = Student.objects.select_related("enrolled_course", "user").order_by("id")
+
+    if search:
+        students = students.filter(
+            Q(full_name__icontains = search) | 
+            Q(email__icontains = search) |
+            Q(enrollment_number__icontains = search) |
+            Q(enrolled_course__course_name__icontains = search)
+        )
+
     paginator = Paginator(students, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    if search:
-        students = students.filter(
-        Q(full_name__icontains = search) | 
-        Q(email__icontains = search) |
-        Q(enrollment_number__icontains = search)
-        )
-
     context = {
-            "students" : page_obj,
-            "search" : search
-        }
+        "students" : page_obj,
+        "page_obj" : page_obj,
+        "search" : search
+    }
     return render(request, "edu_track/students/student_list.html", context)
 
 #Add new students
@@ -361,58 +363,76 @@ def student_add(request):
     courses = Course.objects.all()
 
     if request.method == "POST":
-            user = User.objects.get(id=request.POST.get("user"))
-            full_name=request.POST.get("full_name")
-            address=request.POST.get("address")
-            contact_number=request.POST.get("contact_number")
-            email=request.POST.get("email")
-            guardian_name=request.POST.get("guardian_name")
-            enrollment_number=request.POST.get("enrollment_number")
-            enrolled_course=Course.objects.get(id=request.POST.get("enrolled_course"))
-            enrollment_date=request.POST.get("enrollment_date")
-        
-            Student.objects.create(
-                user = user,
-                full_name = full_name,
-                address = address,
-                contact_number = contact_number,
-                email = email,
-                guardian_name = guardian_name,
-                enrollment_number = enrollment_number,
-                enrolled_course = enrolled_course,
-                enrollment_date = enrollment_date,
-            )
+        user_id = request.POST.get("user")
+        user = None
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+            except (User.DoesNotExist, ValueError):
+                user = None
 
-            return redirect("student_list")
+        full_name = request.POST.get("full_name")
+        address = request.POST.get("address")
+        contact_number = request.POST.get("contact_number")
+        email = request.POST.get("email")
+        guardian_name = request.POST.get("guardian_name")
+        enrollment_number = request.POST.get("enrollment_number")
+        enrolled_course = get_object_or_404(Course, id=request.POST.get("enrolled_course"))
+        enrollment_date = request.POST.get("enrollment_date")
+    
+        Student.objects.create(
+            user = user,
+            full_name = full_name,
+            address = address,
+            contact_number = contact_number,
+            email = email,
+            guardian_name = guardian_name,
+            enrollment_number = enrollment_number,
+            enrolled_course = enrolled_course,
+            enrollment_date = enrollment_date,
+        )
+
+        return redirect("student_list")
 
     return render(request, "edu_track/students/student_add.html", {"courses": courses, "users": users})
 
 #Update students
 @instructor_required
 def student_update(request, id):
-    users = User.objects.filter(student__isnull=True, instructor__isnull=True, is_superuser=False)
-    student = Student.objects.get(id=id)
+    student = get_object_or_404(Student, id=id)
+    users = User.objects.filter(
+        Q(student__isnull=True, instructor__isnull=True, is_superuser=False) |
+        Q(id=student.user.id if student.user else None)
+    ).distinct()
     courses = Course.objects.all()
 
     if request.method == "POST":
-        student.user = User.objects.get(id=request.POST.get("user"))
+        user_id = request.POST.get("user")
+        if user_id:
+            try:
+                student.user = User.objects.get(id=user_id)
+            except (User.DoesNotExist, ValueError):
+                student.user = None
+        else:
+            student.user = None
+
         student.full_name = request.POST.get("full_name")
         student.address = request.POST.get("address")
         student.contact_number = request.POST.get("contact_number")
         student.email = request.POST.get("email")
         student.guardian_name = request.POST.get("guardian_name")
         student.enrollment_number = request.POST.get("enrollment_number")
-        student.enrolled_course = Course.objects.get(id=request.POST.get("enrolled_course"))
+        student.enrolled_course = get_object_or_404(Course, id=request.POST.get("enrolled_course"))
         student.enrollment_date = request.POST.get("enrollment_date")
         student.save()
         return redirect("student_list")
 
-    return render(request, "edu_track/students/student_update.html",{"student": student, "courses": courses, "users" : users})
+    return render(request, "edu_track/students/student_update.html", {"student": student, "courses": courses, "users": users})
 
 #Delete students
 @instructor_required
 def student_delete(request, id):
-    student = Student.objects.get(id=id)
+    student = get_object_or_404(Student, id=id)
     student.delete()
     return redirect("student_list")
 
@@ -420,7 +440,7 @@ def student_delete(request, id):
 #Fetch all modules from Database and Sent it to template
 @instructor_required
 def list_modules(request):
-    module = Module.objects.all()
+    module = Module.objects.all().order_by("id")
     paginator = Paginator(module, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -439,7 +459,7 @@ def module_add(request):
         module_name = request.POST.get("module_name")
         module_code = request.POST.get("module_code")
         full_marks = request.POST.get("full_marks")
-        courses = Course.objects.get(id = request.POST.get("courses"))
+        courses = get_object_or_404(Course, id = request.POST.get("courses"))
 
         Module.objects.create(
             module_name = module_name,
@@ -454,14 +474,14 @@ def module_add(request):
 #Update modules
 @instructor_required
 def module_update(request, id):
-    module = Module.objects.get(id = id)
+    module = get_object_or_404(Module, id = id)
     course = Course.objects.all()
 
     if request.method == "POST":
         module.module_name = request.POST.get("module_name")
         module.module_code = request.POST.get("module_code")
         module.full_marks = request.POST.get("full_marks")
-        module.courses = Course.objects.get(id=request.POST.get("courses"))
+        module.courses = get_object_or_404(Course, id = request.POST.get("courses"))
         module.save()
         return redirect("module_list")
     
@@ -470,7 +490,7 @@ def module_update(request, id):
 #Delete modules
 @instructor_required
 def module_delete(request, id):
-    module = Module.objects.get(id = id)
+    module = get_object_or_404(Module, id = id)
     module.delete()
     return redirect("module_list")
 
@@ -479,17 +499,17 @@ def module_delete(request, id):
 @instructor_required
 def list_result(request):
     search = request.GET.get("search", "")
-    result = Result.objects.all()
-    paginator = Paginator(result, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-    
+    result = Result.objects.select_related("student", "module").order_by("id")
     
     if search:
         result = result.filter(
-        Q(student__full_name__icontains = search) |
-        Q(module__module_name__icontains = search)
+            Q(student__full_name__icontains = search) |
+            Q(module__module_name__icontains = search)
         )
+
+    paginator = Paginator(result, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     context = {
         "results" : page_obj,
@@ -505,13 +525,16 @@ def result_add(request):
     module  = Module.objects.all()
 
     if request.method == "POST":
-        student = Student.objects.get(id = request.POST.get("student"))
-        module = Module.objects.get(id = request.POST.get("module"))
+        student_id = request.POST.get("student")
+        module_id = request.POST.get("module")
         obtained_marks = request.POST.get("obtained_marks")
 
+        student_obj = get_object_or_404(Student, id=student_id)
+        module_obj = get_object_or_404(Module, id=module_id)
+
         Result.objects.create(
-            student = student,
-            module = module,
+            student = student_obj,
+            module = module_obj,
             obtained_marks = obtained_marks
         )
         
@@ -521,12 +544,12 @@ def result_add(request):
 #Update Result
 @instructor_required
 def result_update(request, id):
-    result = Result.objects.get(id = id)
+    result = get_object_or_404(Result, id=id)
     module = Module.objects.all()
     student = Student.objects.all()
     if request.method == "POST":
-        result.student = Student.objects.get(id = request.POST.get("student"))
-        result.module = Module.objects.get(id = request.POST.get("module"))
+        result.student = get_object_or_404(Student, id=request.POST.get("student"))
+        result.module = get_object_or_404(Module, id=request.POST.get("module"))
         result.obtained_marks = request.POST.get("obtained_marks")
         result.save()
         return redirect("result_list")
@@ -535,7 +558,7 @@ def result_update(request, id):
 #Delete Result
 @instructor_required
 def result_delete(request, id):
-    result = Result.objects.get(id = id)
+    result = get_object_or_404(Result, id=id)
     result.delete()
     return redirect("result_list")
 
@@ -544,15 +567,17 @@ def result_delete(request, id):
 @instructor_required
 def list_attendance(request):
     search = request.GET.get("search", "")
-    attendance = Attendance.objects.all()
-    paginator = Paginator(attendance, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    attendance = Attendance.objects.select_related("student").order_by("-date", "-id")
     
     if search:
         attendance = attendance.filter(
             Q(student__full_name__icontains = search)
         )
+
+    paginator = Paginator(attendance, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
     context = {
         "attendance" : page_obj,
         "page_obj" : page_obj,
@@ -566,12 +591,12 @@ def attendance_add(request):
     student = Student.objects.all()
 
     if request.method == "POST":
-        student = Student.objects.get(id = request.POST.get("student"))
+        student_obj = get_object_or_404(Student, id=request.POST.get("student"))
         date = request.POST.get("date")
         status = request.POST.get("status")
 
         Attendance.objects.create(
-            student = Student.objects.get(id = request.POST.get("student")),
+            student = student_obj,
             date = date,
             status = status
         )
@@ -582,11 +607,11 @@ def attendance_add(request):
 #Update attendance
 @instructor_required
 def attendance_update(request, id):
-    attendance = Attendance.objects.get(id = id)
+    attendance = get_object_or_404(Attendance, id=id)
     student = Student.objects.all()
 
     if request.method == "POST":
-        attendance.student = Student.objects.get(id = request.POST.get("student"))
+        attendance.student = get_object_or_404(Student, id=request.POST.get("student"))
         attendance.date = request.POST.get("date")
         attendance.status = request.POST.get("status")
         attendance.save()
@@ -598,7 +623,7 @@ def attendance_update(request, id):
 #Delete attendance
 @instructor_required
 def attendance_delete(request, id):
-    attendance = Attendance.objects.get(id = id)
+    attendance = get_object_or_404(Attendance, id=id)
     attendance.delete()
     return redirect("attendance_list")
 
@@ -624,28 +649,65 @@ def student_import_csv(request):
         if not csv_file:
             messages.error(request, "Please select a CSV File.")
             return redirect("student_import_csv")
+
+        if not csv_file.name.endswith(".csv"):
+            messages.error(request, "Please upload a valid CSV file (.csv).")
+            return redirect("student_import_csv")
         
-        decoded_file = csv_file.read().decode("utf-8").splitlines()
-        reader = csv.DictReader(decoded_file)
+        try:
+            decoded_file = csv_file.read().decode("utf-8").splitlines()
+            reader = csv.DictReader(decoded_file)
+        except Exception as e:
+            messages.error(request, f"Error reading CSV file: {str(e)}")
+            return redirect("student_import_csv")
 
         imported = 0
+        errors = []
 
-        for row in reader:
-            course = Course.objects.get(course_name = row ['Enrolled Course'])
-            Student.objects.create(
-                full_name = row ['Full Name'],
-                address = row ['Address'],
-                contact_number = row ['Contact Number'],
-                email = row ['Email'],
-                guardian_name = row ['Guardian Name'],
-                enrollment_number = row ['Enrollment Number'],
-                enrolled_course = course,
-                enrollment_date = row ['Enrollment Date']
-            )
+        for row_number, row in enumerate(reader, start=2):
+            course_name = row.get("Enrolled Course", "").strip() if row.get("Enrolled Course") else ""
+            if not course_name:
+                errors.append(f"Row {row_number}: Course name is required.")
+                continue
 
-            imported += 1
+            try:
+                course = Course.objects.get(course_name__iexact=course_name)
+            except Course.DoesNotExist:
+                errors.append(f"Row {row_number}: Course '{course_name}' does not exist.")
+                continue
+            except Course.MultipleObjectsReturned:
+                course = Course.objects.filter(course_name__iexact=course_name).first()
 
-        messages.success(request, f"{imported} students imported successfully.")
+            enrollment_number = row.get("Enrollment Number", "").strip() if row.get("Enrollment Number") else ""
+            if not enrollment_number:
+                errors.append(f"Row {row_number}: Enrollment number is required.")
+                continue
+
+            if Student.objects.filter(enrollment_number=enrollment_number).exists():
+                errors.append(f"Row {row_number}: Enrollment number '{enrollment_number}' already exists.")
+                continue
+
+            try:
+                Student.objects.create(
+                    full_name = row.get("Full Name", "").strip(),
+                    address = row.get("Address", "").strip(),
+                    contact_number = row.get("Contact Number", "").strip(),
+                    email = row.get("Email", "").strip(),
+                    guardian_name = row.get("Guardian Name", "").strip(),
+                    enrollment_number = enrollment_number,
+                    enrolled_course = course,
+                    enrollment_date = row.get("Enrollment Date", "").strip()
+                )
+                imported += 1
+            except Exception as e:
+                errors.append(f"Row {row_number}: {str(e)}")
+
+        if imported > 0:
+            messages.success(request, f"{imported} student(s) imported successfully.")
+        if errors:
+            messages.warning(request, f"Some records could not be imported: {'; '.join(errors[:5])}" + (f" (and {len(errors)-5} more errors)" if len(errors) > 5 else ""))
+        if imported == 0 and errors:
+            return redirect("student_import_csv")
         return redirect("student_list")
     
     return render(request, "edu_track/students/import_students_csv.html")

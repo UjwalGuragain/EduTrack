@@ -12,7 +12,6 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class StudentSerializer(serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField
     enrolled_course = CourseSerializer(read_only = False)
 
     class Meta:
@@ -22,15 +21,30 @@ class StudentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         course_data = validated_data.pop("enrolled_course")
 
-        course, created = Course.objects.get_or_create(
+        course, _ = Course.objects.get_or_create(
             course_name = course_data["course_name"],
             course_duration = course_data["course_duration"],
             course_code = course_data["course_code"]
         )
 
-        student = Student.objects.create(**validated_data, enrolled_course = course,)
+        student = Student.objects.create(**validated_data, enrolled_course = course)
 
         return student
+
+    def update(self, instance, validated_data):
+        course_data = validated_data.pop("enrolled_course", None)
+        if course_data:
+            course, _ = Course.objects.get_or_create(
+                course_name = course_data.get("course_name", instance.enrolled_course.course_name),
+                course_duration = course_data.get("course_duration", instance.enrolled_course.course_duration),
+                course_code = course_data.get("course_code", instance.enrolled_course.course_code)
+            )
+            instance.enrolled_course = course
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
     
 class StudentHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

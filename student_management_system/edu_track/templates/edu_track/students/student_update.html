@@ -16,7 +16,7 @@
     <select name="user" class="form-control">
     <option value="">Select User</option>
     {% for user in users %} 
-        <option value="{{ user.id }}"> 
+        <option value="{{ user.id }}" {% if student.user and student.user.id == user.id %}selected{% endif %}> 
             {{ user.username }}
         </option>
     {% endfor %}
