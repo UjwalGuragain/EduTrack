@@ -62,7 +62,10 @@
                         <a href="{% url 'instructor_update' instructor.id %}" class="btn btn-warning btn-sm">Edit</a>
                         {% endif %}
                         {% if user.is_staff %}
-                        <a href="{% url 'instructor_delete' instructor.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this instructor?');">Delete</a>
+                        <form method="post" action="{% url 'instructor_delete' instructor.id %}" class="d-inline" onsubmit="return confirm('Delete this instructor?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
                         {% endif %}
                     </td>
                 </tr>

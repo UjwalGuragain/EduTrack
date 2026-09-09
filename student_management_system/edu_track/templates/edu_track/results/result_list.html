@@ -98,11 +98,10 @@
                             Edit
                         </a>
 
-                        <a href="{% url 'result_delete' result.id %}"
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm('Delete this result?');">
-                            Delete
-                        </a>
+                        <form method="post" action="{% url 'result_delete' result.id %}" class="d-inline" onsubmit="return confirm('Delete this result?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
                     </td>
 
                 </tr>

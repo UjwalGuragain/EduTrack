@@ -306,15 +306,13 @@ class BusinessLogicAndDashboardTests(TestCase):
         self.assertEqual(resp_inst_res.status_code, 200)
         self.assertEqual(resp_inst_res["Content-Type"], "application/pdf")
 
-        # 3. Student can download their own report
+        # 3. Students cannot download attendance or result reports
         self.client.force_login(self.student_user1)
         resp_stud_own = self.client.get(f"/student/{self.student1.id}/attendance-report/")
-        self.assertEqual(resp_stud_own.status_code, 200)
-        self.assertEqual(resp_stud_own["Content-Type"], "application/pdf")
+        self.assertEqual(resp_stud_own.status_code, 403)
 
-        # 4. Student CANNOT download another student's report (403 PermissionDenied)
-        resp_stud_other = self.client.get(f"/student/{self.student2.id}/attendance-report/")
-        self.assertEqual(resp_stud_other.status_code, 403)
+        resp_stud_result = self.client.get(f"/student/{self.student1.id}/result-report/")
+        self.assertEqual(resp_stud_result.status_code, 403)
 
     def test_user_registration_password_length(self):
         # 8 characters should succeed
@@ -561,6 +559,17 @@ class APIPermissionTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(len(resp.json()), 1)
 
+    def test_instructor_can_update_student(self):
+        self.client.force_login(self.instructor_user)
+        response = self.client.patch(
+            f"/api/v1/students/{self.student1.id}/",
+            {"full_name": "Updated API Alice"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.student1.refresh_from_db()
+        self.assertEqual(self.student1.full_name, "Updated API Alice")
+
 #Test-3 covering instructor CRUD workflow
 class InstructorCRUDTests(TestCase):
     def setUp(self):
@@ -604,7 +613,7 @@ class InstructorCRUDTests(TestCase):
         new_instructor.refresh_from_db()
         self.assertEqual(new_instructor.full_name, "Updated Instructor")
 
-        delete_response = self.client.get(f"/instructor/delete/{new_instructor.id}/")
+        delete_response = self.client.post(f"/instructor/delete/{new_instructor.id}/")
         self.assertEqual(delete_response.status_code, 302)
         self.assertFalse(Instructor.objects.filter(pk=new_instructor.id).exists())
 
@@ -707,7 +716,7 @@ class InstructorAccessControlTests(TestCase):
         new_instructor.refresh_from_db()
         self.assertEqual(new_instructor.full_name, "Updated Instructor")
 
-        delete_response = self.client.get(f"/instructor/delete/{new_instructor.id}/")
+        delete_response = self.client.post(f"/instructor/delete/{new_instructor.id}/")
         self.assertEqual(delete_response.status_code, 302)
         self.assertEqual(delete_response.url, "/instructor/")
         self.assertFalse(Instructor.objects.filter(pk=new_instructor.id).exists())

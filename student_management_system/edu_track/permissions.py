@@ -45,6 +45,8 @@ class IsStudentOwnerOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if not request.user or not request.user.is_authenticated:
             return False
+        if request.user.is_staff or hasattr(request.user, "instructor"):
+            return True
         if request.method in permissions.SAFE_METHODS:
             return True
         return obj.pk == request.user.student.pk

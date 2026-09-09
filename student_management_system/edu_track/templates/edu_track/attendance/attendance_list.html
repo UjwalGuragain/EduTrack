@@ -95,7 +95,10 @@
               <td>
               <a href="{% url 'attendance_update' a.id %}" class = "btn btn-warning btn-sm">Edit</a>
               
-              <a href="{% url 'attendance_delete' a.id %}" class = "btn btn-danger btn-sm" onclick="return confirm('Delete this attendance?');">Delete</a>
+              <form method="post" action="{% url 'attendance_delete' a.id %}" class="d-inline" onsubmit="return confirm('Delete this attendance?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
             </td>
           </tr>
         {% endfor %}

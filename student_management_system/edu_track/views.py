@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 from django.utils import timezone
 import csv
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotAllowed
 from .forms import InstructorProfilePictureForm, StudentProfilePictureForm
 from datetime import date
 from reportlab.lib import colors
@@ -391,6 +391,8 @@ def course_update(request, id):
 #Delete courses
 @admin_or_instructor_required
 def course_delete(request, id):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
     course = get_object_or_404(Course, id=id)
     course.delete()
     return redirect("course_list")
@@ -497,6 +499,8 @@ def student_update(request, id):
 #Delete students
 @admin_or_instructor_required
 def student_delete(request, id):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
     student = get_object_or_404(Student, id=id)
     student.delete()
     return redirect("student_list")
@@ -601,6 +605,8 @@ def instructor_delete(request, id):
         messages.error(request, "Only admins can delete instructors.")
         return redirect("instructor_dashboard")
 
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
     instructor = get_object_or_404(Instructor, id=id)
     instructor.delete()
     return redirect("instructor_list")
@@ -659,7 +665,9 @@ def module_update(request, id):
 #Delete modules
 @admin_or_instructor_required
 def module_delete(request, id):
-    module = get_object_or_404(Module, id = id)
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    module = get_object_or_404(Module, id=id)
     module.delete()
     return redirect("module_list")
 
@@ -727,6 +735,8 @@ def result_update(request, id):
 #Delete Result
 @admin_or_instructor_required
 def result_delete(request, id):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
     result = get_object_or_404(Result, id=id)
     result.delete()
     return redirect("result_list")
@@ -792,6 +802,8 @@ def attendance_update(request, id):
 #Delete attendance
 @admin_or_instructor_required
 def attendance_delete(request, id):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
     attendance = get_object_or_404(Attendance, id=id)
     attendance.delete()
     return redirect("attendance_list")
@@ -953,11 +965,7 @@ def student_attendance_pdf(request, id):
 
     student = get_object_or_404(Student, id=id)
 
-    if hasattr(request.user, "student"):
-        if request.user.student.id != student.id:
-            from django.core.exceptions import PermissionDenied
-            raise PermissionDenied
-    elif not (request.user.is_staff or hasattr(request.user, "instructor")):
+    if not (request.user.is_staff or hasattr(request.user, "instructor")):
         from django.core.exceptions import PermissionDenied
         raise PermissionDenied
 
@@ -1143,11 +1151,7 @@ def student_result_pdf(request, id):
 
     student = get_object_or_404(Student, id=id)
 
-    if hasattr(request.user, "student"):
-        if request.user.student.id != student.id:
-            from django.core.exceptions import PermissionDenied
-            raise PermissionDenied
-    elif not (request.user.is_staff or hasattr(request.user, "instructor")):
+    if not (request.user.is_staff or hasattr(request.user, "instructor")):
         from django.core.exceptions import PermissionDenied
         raise PermissionDenied
 
