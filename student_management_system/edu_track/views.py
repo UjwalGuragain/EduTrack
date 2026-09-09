@@ -17,6 +17,30 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, Spacer, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 
+
+def grade_for_percentage(percentage):
+    if percentage >= 90:
+        return "A+"
+    if percentage >= 80:
+        return "A"
+    if percentage >= 70:
+        return "B+"
+    if percentage >= 60:
+        return "B"
+    if percentage >= 50:
+        return "C"
+    if percentage >= 40:
+        return "D"
+    return "F"
+
+
+def result_percentage(result):
+    full_marks = float(result.module.full_marks)
+    if full_marks <= 0:
+        return 0
+    return round((float(result.obtained_marks) / full_marks) * 100, 2)
+
+
 #USER_LOGIN OPERATIONS
 def user_login(request):
     if request.user.is_authenticated:
@@ -254,15 +278,26 @@ def student_result(request):
     highest_marks = max(marks) if marks else 0
     lowest_marks = min(marks) if marks else 0
     result_count = result.count()
+    total_full_marks = sum(float(r.module.full_marks) for r in result)
+    total_obtained_marks = sum(marks)
+    overall_percentage = (
+        round((total_obtained_marks / total_full_marks) * 100, 2)
+        if total_full_marks else 0
+    )
 
     paginator = Paginator(result, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+    for result_item in page_obj:
+        result_item.percentage = result_percentage(result_item)
+        result_item.grade = grade_for_percentage(result_item.percentage)
 
     context = {
         "average_marks": average_marks,
         "highest_marks": highest_marks,
         "lowest_marks": lowest_marks,
+        "overall_percentage": overall_percentage,
+        "overall_grade": grade_for_percentage(overall_percentage),
         "student": student,
         "result": page_obj,
         "page_obj": page_obj,
@@ -1126,12 +1161,13 @@ def student_result_pdf(request, id):
     total_full_marks = 0
     total_obtained = 0
 
-    data = [["Module", "Full Marks", "Obtained Marks"]]
+    data = [["Module", "Full Marks", "Obtained Marks", "Percentage", "Grade"]]
 
     for result in results:
 
         full_marks = float(result.module.full_marks)
         obtained = float(result.obtained_marks)
+        percentage_for_result = result_percentage(result)
 
         total_full_marks += full_marks
         total_obtained += obtained
@@ -1140,6 +1176,8 @@ def student_result_pdf(request, id):
             result.module.module_name,
             f"{full_marks:.0f}",
             f"{obtained:.0f}",
+            f"{percentage_for_result:.2f}%",
+            grade_for_percentage(percentage_for_result),
         ])
 
     percentage = 0
@@ -1149,6 +1187,7 @@ def student_result_pdf(request, id):
             (total_obtained / total_full_marks) * 100,
             2
         )
+    overall_grade = grade_for_percentage(percentage)
 
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = (
@@ -1233,7 +1272,7 @@ def student_result_pdf(request, id):
 
     result_table = Table(
         data,
-        colWidths=[220, 100, 130],
+        colWidths=[150, 80, 100, 90, 60],
     )
 
     style = TableStyle([
@@ -1282,6 +1321,7 @@ def student_result_pdf(request, id):
         ["Total Full Marks", f"{total_full_marks:.0f}"],
         ["Obtained Marks", f"{total_obtained:.0f}"],
         ["Percentage", f"{percentage}%"],
+        ["Overall Grade", overall_grade],
     ]
 
     summary_table = Table(
