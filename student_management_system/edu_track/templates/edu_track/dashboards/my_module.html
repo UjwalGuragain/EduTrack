@@ -14,7 +14,7 @@
             </div>
 
             <div class="card-body">
-                {% if modules or module %}
+                {% if modules %}
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
@@ -24,7 +24,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for mod in modules|default:module %}
+                        {% for mod in modules %}
                         <tr>
                             <td>{{ mod.module_code }}</td>
                             <td>{{ mod.module_name }}</td>

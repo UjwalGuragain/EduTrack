@@ -26,14 +26,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for course in enrolled_course %}
                         <tr>
-                            <td>{{ course.course_code }}</td>
-                            <td>{{ course.course_name }}</td>
-                            <td>{{ course.course_duration }} Years</td>
+                            <td>{{ enrolled_course.course_code }}</td>
+                            <td>{{ enrolled_course.course_name }}</td>
+                            <td>{{ enrolled_course.course_duration }} Years</td>
                             <td>{{ student.enrollment_date }}</td>
                         </tr>
-                        {% endfor %}
                     </tbody>
                 </table>
                 {% else %}

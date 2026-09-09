@@ -218,7 +218,7 @@ def student_profile(request):
 @student_required
 def student_course(request):
     student = request.user.student
-    course = Course.objects.filter(id=student.enrolled_course_id) if student.enrolled_course else Course.objects.none()
+    course = student.enrolled_course
 
     context = {
         "student": student,
@@ -235,7 +235,6 @@ def student_module(request):
     context = {
         "student": student,
         "modules": modules,
-        "module": modules,
     }
     return render(request, "edu_track/dashboards/my_module.html", context)
 
