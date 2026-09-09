@@ -101,9 +101,9 @@ def password_reset(request):
 #RENDER INSTRUCTOR DASHBOARD
 @instructor_required
 def instructor_dashboard(request):
-    if not hasattr(request.user, "instructor"):
+    if not hasattr(request.user, "instructor") and not request.user.is_staff:
         return redirect("login")
-    
+
     present_count = Attendance.objects.filter(status="Present").count()
     absent_count = Attendance.objects.filter(status="Absent").count()
     total_attendance = Attendance.objects.count()
@@ -126,7 +126,7 @@ def instructor_dashboard(request):
     students_without_results = Student.objects.filter(result__isnull=True).distinct().count()
     courses_without_modules = Course.objects.filter(module__isnull=True).distinct().count()
 
-    instructor = request.user.instructor
+    instructor = getattr(request.user, "instructor", None)
     context = {
         "instructor": instructor,
         "recent_results": Result.objects.select_related("student", "module").order_by("-id")[:5],
@@ -271,7 +271,7 @@ def student_result(request):
     return render(request, "edu_track/dashboards/my_result.html", context)
 
 #Display overall details of the student
-@instructor_required
+@admin_or_instructor_required
 def student_detail(request, id):
     student = get_object_or_404(Student.objects.select_related("enrolled_course", "user"), id=id)
     attendance = Attendance.objects.filter(student=student).order_by("-date", "-id")
@@ -307,7 +307,7 @@ def student_detail(request, id):
     return render(request, "edu_track/students/student_detail.html", context)
 #CRUD OPERATIONS FOR COURSE
 #Fetch all courses from Database and Send it to template
-@instructor_required
+@admin_or_instructor_required
 def list_courses(request):
     courses = Course.objects.all().order_by("id")
     paginator = Paginator(courses, 10)
@@ -322,7 +322,7 @@ def list_courses(request):
     return render(request, "edu_track/courses/course_list.html", context)
 
 #Add new courses
-@instructor_required
+@admin_or_instructor_required
 def course_add(request):
     if request.method == "POST":
         code = request.POST.get("course_code")
@@ -340,7 +340,7 @@ def course_add(request):
     return render(request,"edu_track/courses/course_add.html", {"duration_choices": duration_choices},)
 
 #Update courses
-@instructor_required
+@admin_or_instructor_required
 def course_update(request, id):
     course = get_object_or_404(Course, id=id)
 
@@ -355,7 +355,7 @@ def course_update(request, id):
     return render(request,"edu_track/courses/course_update.html",{"course": course, "duration_choices": duration_choices},)
 
 #Delete courses
-@instructor_required
+@admin_or_instructor_required
 def course_delete(request, id):
     course = get_object_or_404(Course, id=id)
     course.delete()
@@ -363,7 +363,7 @@ def course_delete(request, id):
 
 # CRUD OPERATIONS FOR STUDENT
 #Fetch all students from Database and Send it to template
-@instructor_required
+@admin_or_instructor_required
 def list_students(request):
     search = request.GET.get("search", "")
     students = Student.objects.select_related("enrolled_course", "user").order_by("id")
@@ -388,7 +388,7 @@ def list_students(request):
     return render(request, "edu_track/students/student_list.html", context)
 
 #Add new students
-@instructor_required
+@admin_or_instructor_required
 def student_add(request):
     users = User.objects.filter(student__isnull=True, instructor__isnull=True, is_superuser=False)
     courses = Course.objects.all()
@@ -428,7 +428,7 @@ def student_add(request):
     return render(request, "edu_track/students/student_add.html", {"courses": courses, "users": users})
 
 #Update students
-@instructor_required
+@admin_or_instructor_required
 def student_update(request, id):
     student = get_object_or_404(Student, id=id)
     users = User.objects.filter(
@@ -461,15 +461,119 @@ def student_update(request, id):
     return render(request, "edu_track/students/student_update.html", {"student": student, "courses": courses, "users": users})
 
 #Delete students
-@instructor_required
+@admin_or_instructor_required
 def student_delete(request, id):
     student = get_object_or_404(Student, id=id)
     student.delete()
     return redirect("student_list")
 
+# CRUD OPERATIONS FOR INSTRUCTOR
+@admin_or_instructor_required
+def list_instructors(request):
+    search = request.GET.get("search", "")
+    instructors = Instructor.objects.select_related("user").order_by("id")
+
+    if search:
+        instructors = instructors.filter(
+            Q(full_name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(qualification__icontains=search)
+        )
+
+    paginator = Paginator(instructors, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "instructors": page_obj,
+        "page_obj": page_obj,
+        "search": search,
+        "can_manage_instructors": request.user.is_staff,
+    }
+    return render(request, "edu_track/instructors/instructor_list.html", context)
+
+@admin_or_staff_required
+def instructor_add(request):
+    if not request.user.is_staff:
+        messages.error(request, "Only admins can add new instructors.")
+        return redirect("instructor_dashboard")
+
+    users = User.objects.filter(student__isnull=True, instructor__isnull=True, is_superuser=False)
+
+    if request.method == "POST":
+        user_id = request.POST.get("user")
+        user = None
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+            except (User.DoesNotExist, ValueError):
+                user = None
+
+        Instructor.objects.create(
+            user=user,
+            full_name=request.POST.get("full_name"),
+            contact_number=request.POST.get("contact_number"),
+            email=request.POST.get("email"),
+            address=request.POST.get("address"),
+            qualification=request.POST.get("qualification"),
+        )
+        return redirect("instructor_list")
+
+    return render(request, "edu_track/instructors/instructor_add.html", {"users": users})
+
+@admin_or_instructor_required
+def instructor_update(request, id):
+    instructor = get_object_or_404(Instructor, id=id)
+    if not request.user.is_staff and request.user.instructor.id != instructor.id:
+        messages.error(request, "You can only edit your own instructor profile.")
+        return redirect("instructor_dashboard")
+
+    users = User.objects.filter(
+        Q(student__isnull=True, instructor__isnull=True, is_superuser=False) |
+        Q(id=instructor.user.id if instructor.user else None)
+    ).distinct()
+
+    if request.method == "POST":
+        if not request.user.is_staff and request.user.instructor.id != instructor.id:
+            messages.error(request, "You can only edit your own instructor profile.")
+            return redirect("instructor_dashboard")
+
+        user_id = request.POST.get("user")
+        if user_id:
+            try:
+                instructor.user = User.objects.get(id=user_id)
+            except (User.DoesNotExist, ValueError):
+                instructor.user = None
+        else:
+            instructor.user = None
+
+        instructor.full_name = request.POST.get("full_name")
+        instructor.contact_number = request.POST.get("contact_number")
+        instructor.email = request.POST.get("email")
+        instructor.address = request.POST.get("address")
+        instructor.qualification = request.POST.get("qualification")
+        instructor.save()
+        return redirect("instructor_list")
+
+    return render(
+        request,
+        "edu_track/instructors/instructor_update.html",
+        {"instructor": instructor, "users": users, "can_manage_instructors": request.user.is_staff},
+    )
+
+@admin_or_staff_required
+def instructor_delete(request, id):
+    if not request.user.is_staff:
+        messages.error(request, "Only admins can delete instructors.")
+        return redirect("instructor_dashboard")
+
+    instructor = get_object_or_404(Instructor, id=id)
+    instructor.delete()
+    return redirect("instructor_list")
+
 #CRUD OPERATIONS FOR MODULE
 #Fetch all modules from Database and Sent it to template
-@instructor_required
+@admin_or_instructor_required
 def list_modules(request):
     modules = Module.objects.select_related("courses").order_by("id")
     paginator = Paginator(modules, 10)
@@ -483,7 +587,7 @@ def list_modules(request):
     return render(request, "edu_track/modules/module_list.html", context)
 
 #Add modules
-@instructor_required
+@admin_or_instructor_required
 def module_add(request):
     course = Course.objects.all()
     if request.method == "POST":
@@ -503,7 +607,7 @@ def module_add(request):
     return render(request,"edu_track/modules/module_add.html", {"courses" : course} )
 
 #Update modules
-@instructor_required
+@admin_or_instructor_required
 def module_update(request, id):
     module = get_object_or_404(Module, id = id)
     course = Course.objects.all()
@@ -519,7 +623,7 @@ def module_update(request, id):
     return render(request, "edu_track/modules/module_update.html", {"module" : module, "courses" : course})
 
 #Delete modules
-@instructor_required
+@admin_or_instructor_required
 def module_delete(request, id):
     module = get_object_or_404(Module, id = id)
     module.delete()
@@ -527,7 +631,7 @@ def module_delete(request, id):
 
 #CRUD OPERATIONS FOR RESULT
 #Fetch results from Database and Send it to template
-@instructor_required
+@admin_or_instructor_required
 def list_result(request):
     search = request.GET.get("search", "")
     result = Result.objects.select_related("student", "module").order_by("id")
@@ -550,7 +654,7 @@ def list_result(request):
     return render(request, "edu_track/results/result_list.html", context)
 
 #Add Results
-@instructor_required
+@admin_or_instructor_required
 def result_add(request):
     student = Student.objects.all()
     module  = Module.objects.all()
@@ -573,7 +677,7 @@ def result_add(request):
     return render(request, "edu_track/results/result_add.html", {"student": student, "modules" : module})
 
 #Update Result
-@instructor_required
+@admin_or_instructor_required
 def result_update(request, id):
     result = get_object_or_404(Result, id=id)
     module = Module.objects.all()
@@ -587,7 +691,7 @@ def result_update(request, id):
     return render(request, "edu_track/results/result_update.html", {"modules" : module, "students": student, "results" : result})
 
 #Delete Result
-@instructor_required
+@admin_or_instructor_required
 def result_delete(request, id):
     result = get_object_or_404(Result, id=id)
     result.delete()
@@ -595,7 +699,7 @@ def result_delete(request, id):
 
 #CRUD OPERATIONS FOR ATTENDANCE
 # Fetch all attendances from Database and Send it to template
-@instructor_required
+@admin_or_instructor_required
 def list_attendance(request):
     search = request.GET.get("search", "")
     attendance = Attendance.objects.select_related("student").order_by("-date", "-id")
@@ -617,7 +721,7 @@ def list_attendance(request):
     return render(request, "edu_track/attendance/attendance_list.html", context)
 
 #Add attendance
-@instructor_required
+@admin_or_instructor_required
 def attendance_add(request):
     student = Student.objects.all()
 
@@ -636,7 +740,7 @@ def attendance_add(request):
     return render(request, "edu_track/attendance/attendance_add.html", {"student" : student, "status_choices" : status_choices})
 
 #Update attendance
-@instructor_required
+@admin_or_instructor_required
 def attendance_update(request, id):
     attendance = get_object_or_404(Attendance, id=id)
     student = Student.objects.all()
@@ -652,14 +756,14 @@ def attendance_update(request, id):
     return render(request, "edu_track/attendance/attendance_update.html", {"student" : student, "attendance" : attendance})
 
 #Delete attendance
-@instructor_required
+@admin_or_instructor_required
 def attendance_delete(request, id):
     attendance = get_object_or_404(Attendance, id=id)
     attendance.delete()
     return redirect("attendance_list")
 
 #EXPORT STUDENT LIST AS CSV
-@instructor_required
+@admin_or_instructor_required
 def student_export_csv(request):
     response = HttpResponse(content_type = "text/csv")
     response["Content-Disposition"] = 'attachment; filename = "Edutrack Students.csv"'
@@ -672,7 +776,7 @@ def student_export_csv(request):
     return response
 
 #IMPORT STUDENT LIST FROM CSV
-@instructor_required
+@admin_or_instructor_required
 def student_import_csv(request):
     if request.method == "POST":
         csv_file = request.FILES.get("csv_file")
@@ -746,7 +850,10 @@ def student_import_csv(request):
 #INSTRUCTOR PROFILE
 @instructor_required
 def instructor_profile(request):
-    instructor = request.user.instructor
+    instructor = getattr(request.user, "instructor", None)
+    if not instructor:
+        messages.error(request, "Only instructor profiles can view this page.")
+        return redirect("instructor_dashboard")
 
     context = {
         "instructor": instructor,
@@ -783,7 +890,10 @@ def student_upload_picture(request):
 #UPLOAD INSTRUCTOR PROFILE PICTURE
 @instructor_required
 def instructor_upload_picture(request):
-    instructor = request.user.instructor
+    instructor = getattr(request.user, "instructor", None)
+    if not instructor:
+        messages.error(request, "Only instructor profiles can upload a profile picture.")
+        return redirect("instructor_dashboard")
 
     if request.method == "POST":
         form = InstructorProfilePictureForm(
@@ -813,7 +923,7 @@ def student_attendance_pdf(request, id):
         if request.user.student.id != student.id:
             from django.core.exceptions import PermissionDenied
             raise PermissionDenied
-    elif not hasattr(request.user, "instructor") and not request.user.is_superuser:
+    elif not (request.user.is_staff or hasattr(request.user, "instructor")):
         from django.core.exceptions import PermissionDenied
         raise PermissionDenied
 
@@ -1003,7 +1113,7 @@ def student_result_pdf(request, id):
         if request.user.student.id != student.id:
             from django.core.exceptions import PermissionDenied
             raise PermissionDenied
-    elif not hasattr(request.user, "instructor") and not request.user.is_superuser:
+    elif not (request.user.is_staff or hasattr(request.user, "instructor")):
         from django.core.exceptions import PermissionDenied
         raise PermissionDenied
 

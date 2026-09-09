@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="card-title">Instructors</h3>
+            <div class="d-flex">
+                <form method="GET" action="{% url 'instructor_list' %}" class="mr-2">
+                    <div class="input-group input-group-sm" style="width: 300px;">
+                        <input type="text" name="search" class="form-control" value="{{ search }}" placeholder="Search instructors...">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            {% if search %}
+                            <a href="{% url 'instructor_list' %}" class="btn btn-secondary">Clear</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+                {% if user.is_staff %}
+                <a href="{% url 'instructor_add' %}" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus"></i> Add Instructor
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="mb-3">
+            <span class="badge badge-info">
+                Found {{ instructors|length }} instructor record{{ instructors|length|pluralize }}
+            </span>
+        </div>
+
+        {% if instructors %}
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Full Name</th>
+                    <th>Contact</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th>Qualification</th>
+                    <th width="130">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for instructor in instructors %}
+                <tr>
+                    <td>{{ instructor.id }}</td>
+                    <td>{{ instructor.full_name }}</td>
+                    <td>{{ instructor.contact_number }}</td>
+                    <td>{{ instructor.email }}</td>
+                    <td>{{ instructor.address }}</td>
+                    <td>{{ instructor.qualification }}</td>
+                    <td>
+                        {% if user.is_staff or user.instructor.id == instructor.id %}
+                        <a href="{% url 'instructor_update' instructor.id %}" class="btn btn-warning btn-sm">Edit</a>
+                        {% endif %}
+                        {% if user.is_staff %}
+                        <a href="{% url 'instructor_delete' instructor.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this instructor?');">Delete</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-circle"></i> No instructor records found.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% include "pagination.html" %}
+{% endblock %}

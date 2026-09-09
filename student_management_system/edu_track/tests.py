@@ -560,3 +560,154 @@ class APIPermissionTests(TestCase):
         resp = self.client.get("/api/v1/results/")
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(len(resp.json()), 1)
+
+#Test-3 covering instructor CRUD workflow
+class InstructorCRUDTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_user(
+            username="admin_crud_user",
+            password="securepass123",
+            is_staff=True,
+        )
+        self.client.force_login(self.admin_user)
+
+        self.free_user = User.objects.create_user(username="free_user", password="securepass123")
+
+    def test_instructor_list_page_renders(self):
+        response = self.client.get("/instructor/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Instructors")
+
+    def test_instructor_crud_workflow(self):
+        add_response = self.client.post("/instructor/add/", {
+            "user": str(self.free_user.id),
+            "full_name": "New Instructor",
+            "contact_number": "9812345678",
+            "email": "newinstructor@test.com",
+            "address": "Lalitpur",
+            "qualification": "PhD",
+        })
+        self.assertEqual(add_response.status_code, 302)
+        new_instructor = Instructor.objects.get(email="newinstructor@test.com")
+        self.assertEqual(new_instructor.full_name, "New Instructor")
+
+        update_response = self.client.post(f"/instructor/update/{new_instructor.id}/", {
+            "user": str(self.free_user.id),
+            "full_name": "Updated Instructor",
+            "contact_number": "9812345679",
+            "email": "updatedinstructor@test.com",
+            "address": "Bhaktapur",
+            "qualification": "MPhil",
+        })
+        self.assertEqual(update_response.status_code, 302)
+        new_instructor.refresh_from_db()
+        self.assertEqual(new_instructor.full_name, "Updated Instructor")
+
+        delete_response = self.client.get(f"/instructor/delete/{new_instructor.id}/")
+        self.assertEqual(delete_response.status_code, 302)
+        self.assertFalse(Instructor.objects.filter(pk=new_instructor.id).exists())
+
+
+#Test-4 covering instructor access control
+class InstructorAccessControlTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.admin_user = User.objects.create_user(
+            username="admin_instructor_manager",
+            password="adminpass123",
+            is_staff=True,
+        )
+
+        self.instructor_user = User.objects.create_user(
+            username="plain_instructor",
+            password="instructorpass123",
+        )
+        self.instructor = Instructor.objects.create(
+            user=self.instructor_user,
+            full_name="Plain Instructor",
+            contact_number="9800000009",
+            email="plaininstructor@test.com",
+            address="Kathmandu",
+            qualification="MSc",
+        )
+
+        self.other_instructor_user = User.objects.create_user(
+            username="other_instructor",
+            password="otherpass123",
+        )
+        self.other_instructor = Instructor.objects.create(
+            user=self.other_instructor_user,
+            full_name="Other Instructor",
+            contact_number="9800000010",
+            email="otherinstructor@test.com",
+            address="Pokhara",
+            qualification="PhD",
+        )
+
+    def test_instructor_can_list_and_only_edit_own_profile(self):
+        self.client.force_login(self.instructor_user)
+
+        response = self.client.get("/instructor/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Instructors")
+        self.assertNotContains(response, "Add Instructor")
+
+        own_update_response = self.client.get(f"/instructor/update/{self.instructor.id}/")
+        self.assertEqual(own_update_response.status_code, 200)
+
+        other_update_response = self.client.get(f"/instructor/update/{self.other_instructor.id}/")
+        self.assertEqual(other_update_response.status_code, 302)
+        self.assertEqual(other_update_response.url, "/instructor/dashboard/")
+
+        blocked_add_response = self.client.post("/instructor/add/", {
+            "user": str(self.other_instructor_user.id),
+            "full_name": "Should Not Be Added",
+            "contact_number": "9800000022",
+            "email": "blocked@test.com",
+            "address": "Lalitpur",
+            "qualification": "MBA",
+        })
+        self.assertEqual(blocked_add_response.status_code, 302)
+        self.assertEqual(blocked_add_response.url, "/instructor/dashboard/")
+        self.assertFalse(Instructor.objects.filter(email="blocked@test.com").exists())
+
+    def test_admin_can_full_manage_instructors(self):
+        self.client.force_login(self.admin_user)
+
+        free_user = User.objects.create_user(
+            username="free_instructor_candidate",
+            password="candidatepass123",
+        )
+
+        add_response = self.client.post("/instructor/add/", {
+            "user": str(free_user.id),
+            "full_name": "New Instructor",
+            "contact_number": "9812345678",
+            "email": "newinstructor@test.com",
+            "address": "Lalitpur",
+            "qualification": "PhD",
+        })
+        self.assertEqual(add_response.status_code, 302)
+        self.assertEqual(add_response.url, "/instructor/")
+        new_instructor = Instructor.objects.get(email="newinstructor@test.com")
+        self.assertEqual(new_instructor.full_name, "New Instructor")
+
+        update_response = self.client.post(f"/instructor/update/{new_instructor.id}/", {
+            "user": str(free_user.id),
+            "full_name": "Updated Instructor",
+            "contact_number": "9812345679",
+            "email": "updatedinstructor@test.com",
+            "address": "Bhaktapur",
+            "qualification": "MPhil",
+        })
+        self.assertEqual(update_response.status_code, 302)
+        self.assertEqual(update_response.url, "/instructor/")
+        new_instructor.refresh_from_db()
+        self.assertEqual(new_instructor.full_name, "Updated Instructor")
+
+        delete_response = self.client.get(f"/instructor/delete/{new_instructor.id}/")
+        self.assertEqual(delete_response.status_code, 302)
+        self.assertEqual(delete_response.url, "/instructor/")
+        self.assertFalse(Instructor.objects.filter(pk=new_instructor.id).exists())
