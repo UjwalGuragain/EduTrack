@@ -1357,3 +1357,39 @@ def student_result_pdf(request, id):
     doc.build(elements)
 
     return response
+
+
+def error_404(request, exception):
+    """Custom 404 page handler."""
+    return render(
+        request,
+        "edu_track/errors/404.html",
+        status=404,
+    )
+
+
+def error_403(request, exception):
+    """Custom 403 page handler."""
+    return render(
+        request,
+        "edu_track/errors/403.html",
+        status=403,
+    )
+
+
+def error_400(request, exception):
+    """Custom 400 page handler."""
+    return render(
+        request,
+        "edu_track/errors/400.html",
+        status=400,
+    )
+
+
+def error_500(request):
+    """Custom 500 page handler."""
+    return render(
+        request,
+        "edu_track/errors/500.html",
+        status=500,
+    )

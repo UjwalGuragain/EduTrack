@@ -1,0 +1,23 @@
+{% extends 'authbase.html' %}
+{% block content %}
+<div class="login-box">
+    <div class="card card-outline card-danger">
+        <div class="card-header text-center">
+            <a href="#" class="h1"><b>Edu</b>Track</a>
+        </div>
+        <div class="card-body">
+            <p class="login-box-msg text-center">
+                <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+            </p>
+            <h3 class="text-center font-weight-bold" style="font-size: 2.5rem;">500</h3>
+            <p class="text-center">Oops! Something went wrong.</p>
+            <p class="text-center text-muted">An unexpected error occurred on our end. Please try again later, or contact support if the problem persists.</p>
+            <div class="row">
+                <div class="col-12">
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-block">Back to Safety</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,9 +1,10 @@
 def user_role(request):
+    user = getattr(request, "user", None)
     return {
         "is_instructor": (
-            hasattr(request.user, "instructor")
+            hasattr(user, "instructor")
         ),
         "is_student": (
-            hasattr(request.user, "student")
+            hasattr(user, "student")
         ),
     }

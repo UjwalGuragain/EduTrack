@@ -1,7 +1,10 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
+from django.test import override_settings
+from django.http import HttpRequest
 from edu_track.models import Instructor, Student, Course, Module, Result, Attendance
 from edu_track.serializers import StudentSerializer
+from edu_track import views as edu_views
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 #Test-1 covering critical bug fixes
@@ -721,6 +724,7 @@ class InstructorAccessControlTests(TestCase):
         self.assertEqual(delete_response.url, "/instructor/")
         self.assertFalse(Instructor.objects.filter(pk=new_instructor.id).exists())
 
+#Test-4 covering result validation
 class ResultValidationTests(TestCase):
     def setUp(self):
         self.client = Client()
@@ -856,3 +860,50 @@ class ResultValidationTests(TestCase):
             Result.objects.filter(student=self.student, module=self.module_a).count(),
             1,
         )
+
+#Test-5 covering custorm Error pages
+class ErrorPageTests(TestCase):
+    """Custom error templates (400/403/404/500) render without crashing."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username="erruser", password="testpass123")
+        self.client.force_login(self.user)
+
+    @override_settings(DEBUG=False, ALLOWED_HOSTS=["127.0.0.1", "testserver"])
+    def test_404_page_renders(self):
+        resp = self.client.get("/nonexistent-page-xyz/", HTTP_HOST="127.0.0.1")
+        self.assertEqual(resp.status_code, 404)
+        self.assertContains(resp, "404", status_code=404)
+
+    @override_settings(DEBUG=False)
+    def test_403_page_renders(self):
+        request = HttpRequest()
+        request.method = "GET"
+        request.path = "/forbidden/"
+        request.user = self.user
+        resp = edu_views.error_403(
+            request, exception=PermissionError("Denied")
+        )
+        self.assertEqual(resp.status_code, 403)
+        self.assertContains(resp, "403", status_code=403)
+
+    @override_settings(DEBUG=False)
+    def test_400_page_renders(self):
+        request = HttpRequest()
+        request.method = "GET"
+        request.path = "/bad-request/"
+        request.user = self.user
+        resp = edu_views.error_400(request, exception=Exception("Bad"))
+        self.assertEqual(resp.status_code, 400)
+        self.assertContains(resp, "400", status_code=400)
+
+    @override_settings(DEBUG=False)
+    def test_500_page_renders(self):
+        request = HttpRequest()
+        request.method = "GET"
+        request.path = "/server-error/"
+        request.user = self.user
+        resp = edu_views.error_500(request)
+        self.assertEqual(resp.status_code, 500)
+        self.assertContains(resp, "500", status_code=500)

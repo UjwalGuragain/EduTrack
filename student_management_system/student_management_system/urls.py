@@ -19,6 +19,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+handler400 = "edu_track.views.error_400"
+handler403 = "edu_track.views.error_403"
+handler404 = "edu_track.views.error_404"
+handler500 = "edu_track.views.error_500"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include("edu_track.urls"))
