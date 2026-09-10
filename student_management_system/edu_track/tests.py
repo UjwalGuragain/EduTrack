@@ -720,3 +720,139 @@ class InstructorAccessControlTests(TestCase):
         self.assertEqual(delete_response.status_code, 302)
         self.assertEqual(delete_response.url, "/instructor/")
         self.assertFalse(Instructor.objects.filter(pk=new_instructor.id).exists())
+
+class ResultValidationTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.instructor_user = User.objects.create_user(
+            username="result_instructor",
+            password="pass12345",
+        )
+        self.instructor = Instructor.objects.create(
+            user=self.instructor_user,
+            full_name="Result Instructor",
+            contact_number="9800000023",
+            email="resultinstructor@test.com",
+            address="Kathmandu",
+            qualification="PhD",
+        )
+        self.client.force_login(self.instructor_user)
+
+        self.course_a = Course.objects.create(
+            course_name="Computer Science", course_code="CS101", course_duration=4
+        )
+        self.course_b = Course.objects.create(
+            course_name="Business", course_code="BUS101", course_duration=3
+        )
+        self.module_a = Module.objects.create(
+            module_name="Algorithms", module_code="CS201", full_marks=100,
+            courses=self.course_a,
+        )
+        self.module_b = Module.objects.create(
+            module_name="Marketing", module_code="BUS201", full_marks=50,
+            courses=self.course_b,
+        )
+        self.student = Student.objects.create(
+            full_name="Result Alice",
+            address="Kathmandu",
+            contact_number="9800000024",
+            email="resultalice@test.com",
+            guardian_name="Guard",
+            enrollment_number="RES001",
+            enrolled_course=self.course_a,
+            enrollment_date="2026-01-01",
+        )
+
+    def test_result_creation_rejects_marks_exceeding_full_marks(self):
+        response = self.client.post("/result/add/", {
+            "student": str(self.student.id),
+            "module": str(self.module_a.id),
+            "obtained_marks": "150",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "cannot exceed")
+        self.assertFalse(Result.objects.filter(student=self.student, module=self.module_a).exists())
+
+    def test_result_creation_rejects_negative_marks(self):
+        response = self.client.post("/result/add/", {
+            "student": str(self.student.id),
+            "module": str(self.module_a.id),
+            "obtained_marks": "-5",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "negative")
+        self.assertFalse(Result.objects.filter(student=self.student, module=self.module_a).exists())
+
+    def test_result_creation_rejects_module_from_different_course(self):
+        response = self.client.post("/result/add/", {
+            "student": str(self.student.id),
+            "module": str(self.module_b.id),
+            "obtained_marks": "30",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "does not belong")
+        self.assertFalse(Result.objects.filter(student=self.student, module=self.module_b).exists())
+
+    def test_result_creation_rejects_duplicate_student_module_pair(self):
+        Result.objects.create(student=self.student, module=self.module_a, obtained_marks=80)
+        response = self.client.post("/result/add/", {
+            "student": str(self.student.id),
+            "module": str(self.module_a.id),
+            "obtained_marks": "85",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "already exists")
+        self.assertEqual(
+            Result.objects.filter(student=self.student, module=self.module_a).count(),
+            1,
+        )
+
+    def test_result_update_rejects_marks_exceeding_full_marks(self):
+        result = Result.objects.create(student=self.student, module=self.module_a, obtained_marks=80)
+        response = self.client.post(f"/result/update/{result.id}/", {
+            "student": str(self.student.id),
+            "module": str(self.module_a.id),
+            "obtained_marks": "120",
+        })
+        self.assertEqual(response.status_code, 200)
+        result.refresh_from_db()
+        self.assertEqual(float(result.obtained_marks), 80.0)
+
+    def test_api_rejects_negative_and_excessive_marks_and_cross_course_module(self):
+        self.client.force_login(self.instructor_user)
+        resp_neg = self.client.post("/api/v1/results/", {
+            "student": self.student.id,
+            "module": self.module_a.id,
+            "obtained_marks": -3,
+        }, content_type="application/json")
+        self.assertEqual(resp_neg.status_code, 400)
+
+        resp_excess = self.client.post("/api/v1/results/", {
+            "student": self.student.id,
+            "module": self.module_a.id,
+            "obtained_marks": 110,
+        }, content_type="application/json")
+        self.assertEqual(resp_excess.status_code, 400)
+
+        resp_cross = self.client.post("/api/v1/results/", {
+            "student": self.student.id,
+            "module": self.module_b.id,
+            "obtained_marks": 30,
+        }, content_type="application/json")
+        self.assertEqual(resp_cross.status_code, 400)
+        self.assertFalse(Result.objects.filter(student=self.student).exists())
+
+    def test_api_rejects_duplicate_student_module_pair(self):
+        Result.objects.create(student=self.student, module=self.module_a, obtained_marks=80)
+        self.client.force_login(self.instructor_user)
+        resp = self.client.post("/api/v1/results/", {
+            "student": self.student.id,
+            "module": self.module_a.id,
+            "obtained_marks": 90,
+        }, content_type="application/json")
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(
+            Result.objects.filter(student=self.student, module=self.module_a).count(),
+            1,
+        )

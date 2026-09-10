@@ -68,6 +68,26 @@ class ResultSerializer(serializers.ModelSerializer):
         model = Result
         fields = "__all__"
 
+    def validate(self, attrs):
+        student = attrs.get("student")
+        module = attrs.get("module")
+        obtained_marks = attrs.get("obtained_marks")
+
+        if student and module and module.courses_id != student.enrolled_course_id:
+            raise serializers.ValidationError(
+                "The selected module does not belong to the student's enrolled course."
+            )
+
+        if module is not None and obtained_marks is not None:
+            if obtained_marks < 0:
+                raise serializers.ValidationError("Obtained marks cannot be negative.")
+            if obtained_marks > module.full_marks:
+                raise serializers.ValidationError(
+                    f"Obtained marks cannot exceed the module full marks ({module.full_marks})."
+                )
+
+        return attrs
+
 class AttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attendance

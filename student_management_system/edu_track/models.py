@@ -45,6 +45,14 @@ class Result(models.Model):
     module = models.ForeignKey(Module, on_delete=models.CASCADE)
     obtained_marks = models.DecimalField(max_digits=5, decimal_places=2)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "module"],
+                name="unique_student_module_result"
+            )
+        ]
+
     def __str__(self):
         return f"{self.student} - {self.module}"
 

@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 from django.utils import timezone
 import csv
 from django.http import HttpResponse, HttpResponseNotAllowed
-from .forms import InstructorProfilePictureForm, StudentProfilePictureForm
+from .forms import InstructorProfilePictureForm, StudentProfilePictureForm, ResultForm
 from datetime import date
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
@@ -329,17 +329,7 @@ def student_detail(request, id):
 
     return render(request, "edu_track/students/student_detail.html", context)
 
-    context = {
-        "student" : student,
-        "result" : result,
-        "attendance" : attendance,
-        "present_count" : present_count,
-        "absent_count" : absent_count,
-        "attendance_percentage" : round(attendance_percentage, 2)
-    }
-
-    return render(request, "edu_track/students/student_detail.html", context)
-#CRUD OPERATIONS FOR COURSE
+    #CRUD OPERATIONS FOR COURSE
 #Fetch all courses from Database and Send it to template
 @admin_or_instructor_required
 def list_courses(request):
@@ -702,20 +692,22 @@ def result_add(request):
     module  = Module.objects.all()
 
     if request.method == "POST":
-        student_id = request.POST.get("student")
-        module_id = request.POST.get("module")
-        obtained_marks = request.POST.get("obtained_marks")
+        form = ResultForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Result added successfully.")
+            return redirect("result_list")
 
-        student_obj = get_object_or_404(Student, id=student_id)
-        module_obj = get_object_or_404(Module, id=module_id)
+        # Keep the submitted values visible in the re-rendered form.
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"{field}: {error}")
 
-        Result.objects.create(
-            student = student_obj,
-            module = module_obj,
-            obtained_marks = obtained_marks
+        return render(
+            request,
+            "edu_track/results/result_add.html",
+            {"student": student, "modules": module, "form": form},
         )
-        
-        return redirect("result_list")
     return render(request, "edu_track/results/result_add.html", {"student": student, "modules" : module})
 
 #Update Result
@@ -725,11 +717,22 @@ def result_update(request, id):
     module = Module.objects.all()
     student = Student.objects.all()
     if request.method == "POST":
-        result.student = get_object_or_404(Student, id=request.POST.get("student"))
-        result.module = get_object_or_404(Module, id=request.POST.get("module"))
-        result.obtained_marks = request.POST.get("obtained_marks")
-        result.save()
-        return redirect("result_list")
+        form = ResultForm(request.POST, instance=result)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Result updated successfully.")
+            return redirect("result_list")
+
+        # Keep the submitted values visible in the re-rendered form.
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"{field}: {error}")
+
+        return render(
+            request,
+            "edu_track/results/result_update.html",
+            {"modules" : module, "students": student, "results" : result, "form": form},
+        )
     return render(request, "edu_track/results/result_update.html", {"modules" : module, "students": student, "results" : result})
 
 #Delete Result
