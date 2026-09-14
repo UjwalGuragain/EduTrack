@@ -2,7 +2,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .models import Course, Module, Student, Result, Attendance, Instructor
+from .models import (
+    Attendance,
+    Course,
+    Instructor,
+    Module,
+    Result,
+    Semester,
+    Student,
+)
 from .decorators import *
 from django.db.models import Q
 from django.core.paginator import Paginator
@@ -148,7 +156,7 @@ def instructor_dashboard(request):
     results_this_week = Result.objects.count()
     students_without_attendance = Student.objects.filter(attendance__isnull=True).distinct().count()
     students_without_results = Student.objects.filter(result__isnull=True).distinct().count()
-    courses_without_modules = Course.objects.filter(module__isnull=True).distinct().count()
+    courses_without_modules = Course.objects.filter(semesters__modules__isnull=True).distinct().count()
 
     instructor = getattr(request.user, "instructor", None)
     context = {
@@ -230,7 +238,7 @@ def student_course(request):
 @student_required
 def student_module(request):
     student = request.user.student
-    modules = Module.objects.filter(courses=student.enrolled_course).select_related("courses").order_by("module_code") if student.enrolled_course else Module.objects.none()
+    modules = Module.objects.filter(semester__course=student.enrolled_course).select_related("semester").order_by("module_code") if student.enrolled_course else Module.objects.none()
 
     context = {
         "student": student,
@@ -605,7 +613,7 @@ def instructor_delete(request, id):
 #Fetch all modules from Database and Sent it to template
 @admin_or_instructor_required
 def list_modules(request):
-    modules = Module.objects.select_related("courses").order_by("id")
+    modules = Module.objects.select_related("semester", "semester__course", "semester__academic_year").order_by("id")
     paginator = Paginator(modules, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -619,38 +627,38 @@ def list_modules(request):
 #Add modules
 @admin_or_instructor_required
 def module_add(request):
-    course = Course.objects.all()
+    semesters = Semester.objects.select_related("course", "academic_year").order_by("course__course_name", "year_level", "semester_number")
     if request.method == "POST":
         module_name = request.POST.get("module_name")
         module_code = request.POST.get("module_code")
         full_marks = request.POST.get("full_marks")
-        courses = get_object_or_404(Course, id = request.POST.get("courses"))
+        semester = get_object_or_404(Semester, id = request.POST.get("semester"))
 
         Module.objects.create(
             module_name = module_name,
             module_code = module_code,
             full_marks = full_marks,
-            courses = courses
+            semester = semester
         )
 
         return redirect("module_list")
-    return render(request,"edu_track/modules/module_add.html", {"courses" : course} )
+    return render(request,"edu_track/modules/module_add.html", {"semesters" : semesters} )
 
 #Update modules
 @admin_or_instructor_required
 def module_update(request, id):
     module = get_object_or_404(Module, id = id)
-    course = Course.objects.all()
+    semesters = Semester.objects.select_related("course", "academic_year").order_by("course__course_name", "year_level", "semester_number")
 
     if request.method == "POST":
         module.module_name = request.POST.get("module_name")
         module.module_code = request.POST.get("module_code")
         module.full_marks = request.POST.get("full_marks")
-        module.courses = get_object_or_404(Course, id = request.POST.get("courses"))
+        module.semester = get_object_or_404(Semester, id = request.POST.get("semester"))
         module.save()
         return redirect("module_list")
     
-    return render(request, "edu_track/modules/module_update.html", {"module" : module, "courses" : course})
+    return render(request, "edu_track/modules/module_update.html", {"module" : module, "semesters" : semesters})
 
 #Delete modules
 @admin_or_instructor_required
@@ -666,7 +674,7 @@ def module_delete(request, id):
 @admin_or_instructor_required
 def list_result(request):
     search = request.GET.get("search", "")
-    result = Result.objects.select_related("student", "module").order_by("id")
+    result = Result.objects.select_related("student", "module", "module__semester", "module__semester__course").order_by("id")
     
     if search:
         result = result.filter(
@@ -689,7 +697,7 @@ def list_result(request):
 @admin_or_instructor_required
 def result_add(request):
     student = Student.objects.all()
-    module  = Module.objects.all()
+    module  = Module.objects.select_related("semester", "semester__course").all()
 
     if request.method == "POST":
         form = ResultForm(request.POST)
@@ -714,7 +722,7 @@ def result_add(request):
 @admin_or_instructor_required
 def result_update(request, id):
     result = get_object_or_404(Result, id=id)
-    module = Module.objects.all()
+    module = Module.objects.select_related("semester", "semester__course").all()
     student = Student.objects.all()
     if request.method == "POST":
         form = ResultForm(request.POST, instance=result)

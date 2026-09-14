@@ -30,13 +30,15 @@
       </div>
 
       <div class = "form-group">
-        <label for="id_courses">Course:</label>
-        <select id="id_courses" name="courses" class="form-control" required>
-          {% for c in courses %}
-            <option value="{{ c.id }}">{{ c.course_name }}</option>
-          {% endfor %}
-        </select>
-      </div>
+              <label for="id_semester">Semester:</label>
+              <select id="id_semester" name="semester" class="form-control" required>
+                {% for s in semesters %}
+                  <option value="{{ s.id }}">
+                    {{ s.course.course_name }} - Year {{ s.year_level }} Semester {{ s.semester_number }} ({{ s.academic_year.year_label }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
 
     </div>
 

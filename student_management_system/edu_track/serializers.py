@@ -11,6 +11,37 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = "__all__"
 
+class AcademicYearSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AcademicYear
+        fields = "__all__"
+
+class SemesterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Semester
+        fields = "__all__"
+        validators = []
+
+    def validate(self, attrs):
+        course = attrs.get("course")
+        year_level = attrs.get("year_level")
+
+        if course is None and self.instance is not None:
+            course = self.instance.course
+        if year_level is None and self.instance is not None:
+            year_level = self.instance.year_level
+
+        if course is not None and year_level is not None:
+            if year_level > course.course_duration:
+                raise serializers.ValidationError({
+                    "year_level": (
+                        f"{course} is a {course.get_course_duration_display()} course; "
+                        f"Year {year_level} is not available."
+                    )
+                })
+
+        return attrs
+
 class StudentSerializer(serializers.ModelSerializer):
     enrolled_course = CourseSerializer(read_only = False)
 
@@ -67,16 +98,18 @@ class ResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = Result
         fields = "__all__"
+        validators = []
 
     def validate(self, attrs):
         student = attrs.get("student")
         module = attrs.get("module")
         obtained_marks = attrs.get("obtained_marks")
 
-        if student and module and module.courses_id != student.enrolled_course_id:
-            raise serializers.ValidationError(
-                "The selected module does not belong to the student's enrolled course."
-            )
+        if module:
+            if student and module.semester.course_id != student.enrolled_course_id:
+                raise serializers.ValidationError(
+                    "The selected module does not belong to the student's enrolled course."
+                )
 
         if module is not None and obtained_marks is not None:
             if obtained_marks < 0:
@@ -84,6 +117,16 @@ class ResultSerializer(serializers.ModelSerializer):
             if obtained_marks > module.full_marks:
                 raise serializers.ValidationError(
                     f"Obtained marks cannot exceed the module full marks ({module.full_marks})."
+                )
+
+        if student and module:
+            duplicate_results = Result.objects.filter(student=student, module=module)
+            instance = self.instance
+            if instance is not None:
+                duplicate_results = duplicate_results.exclude(pk=instance.pk)
+            if duplicate_results.exists():
+                raise serializers.ValidationError(
+                    "A result already exists for this student and module."
                 )
 
         return attrs

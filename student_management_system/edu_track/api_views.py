@@ -40,6 +40,16 @@ class CourseViewSet(ModelViewSet):
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated, IsAdminOrInstructorWrite]
 
+class AcademicYearViewSet(ModelViewSet):
+    queryset = AcademicYear.objects.all()
+    serializer_class = AcademicYearSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrInstructorWrite]
+
+class SemesterViewSet(ModelViewSet):
+    queryset = Semester.objects.select_related("course", "academic_year").all()
+    serializer_class = SemesterSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrInstructorWrite]
+
 class ModuleViewSet(ModelViewSet):
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer

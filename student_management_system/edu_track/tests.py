@@ -2,7 +2,7 @@ from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.test import override_settings
 from django.http import HttpRequest
-from edu_track.models import Instructor, Student, Course, Module, Result, Attendance
+from edu_track.models import Instructor, Student, Course, Module, Result, Attendance, AcademicYear, Semester
 from edu_track.serializers import StudentSerializer
 from edu_track import views as edu_views
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -28,11 +28,27 @@ class CriticalBugFixTests(TestCase):
             course_code="CS101",
             course_duration=4
         )
+        self.academic_year, _ = AcademicYear.objects.get_or_create(
+            year_label="2025/2026",
+            defaults={
+                "start_date": "2025-09-01",
+                "end_date": "2026-08-31",
+            },
+        )
+        self.semester = Semester.objects.create(
+            academic_year=self.academic_year,
+            course=self.course,
+            year_level=1,
+            semester_number=1,
+            name="Semester 1",
+            start_date="2025-09-01",
+            end_date="2026-01-31"
+        )
         self.module = Module.objects.create(
             module_name="Algorithms",
             module_code="CS102",
             full_marks=100,
-            courses=self.course
+            semester=self.semester
         )
         self.student1 = Student.objects.create(
             full_name="Alice Smith",
@@ -197,17 +213,33 @@ class BusinessLogicAndDashboardTests(TestCase):
             course_code="EC101",
             course_duration=2
         )
+        self.academic_year, _ = AcademicYear.objects.get_or_create(
+            year_label="2025/2026",
+            defaults={
+                "start_date": "2025-09-01",
+                "end_date": "2026-08-31",
+            },
+        )
+        self.semester = Semester.objects.create(
+            academic_year=self.academic_year,
+            course=self.course1,
+            year_level=1,
+            semester_number=1,
+            name="Semester 1",
+            start_date="2025-09-01",
+            end_date="2026-01-31"
+        )
         self.module1 = Module.objects.create(
             module_name="Web Architecture",
             module_code="SE201",
             full_marks=100,
-            courses=self.course1
+            semester=self.semester
         )
         self.module2 = Module.objects.create(
             module_name="Database Systems",
             module_code="SE202",
             full_marks=100,
-            courses=self.course1
+            semester=self.semester
         )
         self.student1 = Student.objects.create(
             user=self.student_user1,
@@ -356,9 +388,25 @@ class APIPermissionTests(TestCase):
         self.course = Course.objects.create(
             course_name="Computer Science", course_code="CS101", course_duration=4
         )
+        self.academic_year, _ = AcademicYear.objects.get_or_create(
+            year_label="2025/2026",
+            defaults={
+                "start_date": "2025-09-01",
+                "end_date": "2026-08-31",
+            },
+        )
+        self.semester = Semester.objects.create(
+            academic_year=self.academic_year,
+            course=self.course,
+            year_level=1,
+            semester_number=1,
+            name="Semester 1",
+            start_date="2025-09-01",
+            end_date="2026-01-31"
+        )
         self.module = Module.objects.create(
             module_name="Algorithms", module_code="CS201", full_marks=100,
-            courses=self.course
+            semester=self.semester
         )
 
         # Two students
@@ -406,6 +454,8 @@ class APIPermissionTests(TestCase):
             "/api/v1/students/",
             "/api/v1/instructors/",
             "/api/v1/courses/",
+            "/api/v1/academic-years/",
+            "/api/v1/semesters/",
             "/api/v1/modules/",
             "/api/v1/attendances/",
             "/api/v1/results/",
@@ -515,6 +565,41 @@ class APIPermissionTests(TestCase):
             "course_duration": 3,
         })
         self.assertEqual(resp.status_code, 201)
+
+    def test_instructor_can_manage_academic_years_and_semesters(self):
+        self.client.force_login(self.instructor_user)
+
+        academic_year_response = self.client.post("/api/v1/academic-years/", {
+            "year_label": "2026/2027",
+            "start_date": "2026-09-01",
+            "end_date": "2027-08-31",
+        })
+        self.assertEqual(academic_year_response.status_code, 201)
+
+        semester_response = self.client.post("/api/v1/semesters/", {
+            "academic_year": academic_year_response.json()["id"],
+            "course": self.course.id,
+            "year_level": 1,
+            "semester_number": 1,
+            "name": "Semester 1",
+            "start_date": "2026-09-01",
+            "end_date": "2027-01-31",
+        })
+        self.assertEqual(semester_response.status_code, 201)
+
+    def test_semester_api_rejects_year_beyond_course_duration(self):
+        self.client.force_login(self.instructor_user)
+        response = self.client.post("/api/v1/semesters/", {
+            "academic_year": self.academic_year.id,
+            "course": self.course.id,
+            "year_level": 5,
+            "semester_number": 1,
+            "name": "Invalid Year",
+            "start_date": "2026-09-01",
+            "end_date": "2027-01-31",
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("year_level", response.json())
 
     # --- Attendance & Results object-level ownership ---
     def test_student_can_only_read_own_attendance(self):
@@ -749,13 +834,38 @@ class ResultValidationTests(TestCase):
         self.course_b = Course.objects.create(
             course_name="Business", course_code="BUS101", course_duration=3
         )
+        self.academic_year, _ = AcademicYear.objects.get_or_create(
+            year_label="2025/2026",
+            defaults={
+                "start_date": "2025-09-01",
+                "end_date": "2026-08-31",
+            },
+        )
+        self.semester_a = Semester.objects.create(
+            academic_year=self.academic_year,
+            course=self.course_a,
+            year_level=1,
+            semester_number=1,
+            name="CS Semester 1",
+            start_date="2025-09-01",
+            end_date="2026-01-31"
+        )
+        self.semester_b = Semester.objects.create(
+            academic_year=self.academic_year,
+            course=self.course_b,
+            year_level=1,
+            semester_number=1,
+            name="BUS Semester 1",
+            start_date="2025-09-01",
+            end_date="2026-01-31"
+        )
         self.module_a = Module.objects.create(
             module_name="Algorithms", module_code="CS201", full_marks=100,
-            courses=self.course_a,
+            semester=self.semester_a,
         )
         self.module_b = Module.objects.create(
             module_name="Marketing", module_code="BUS201", full_marks=50,
-            courses=self.course_b,
+            semester=self.semester_b,
         )
         self.student = Student.objects.create(
             full_name="Result Alice",

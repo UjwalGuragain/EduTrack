@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 class Course(models.Model):
     course_name  = models.CharField(max_length=100)
@@ -31,11 +32,68 @@ class Student(models.Model):
     def __str__(self):
         return self.full_name
     
+class AcademicYear(models.Model):
+    """Academic year (e.g. 2025/2026) that semesters belong to."""
+    year_label = models.CharField(max_length=50, unique=True)
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    class Meta:
+        ordering = ["-start_date"]
+
+    def __str__(self):
+        return self.year_label
+
+
+class Semester(models.Model):
+    """A semester belongs to one course within one academic year."""
+    YEAR_LEVEL_CHOICES = [
+        (1, "Year 1"),
+        (2, "Year 2"),
+        (3, "Year 3"),
+        (4, "Year 4"),
+        (5, "Year 5"),
+    ]
+    SEMESTER_NUMBER_CHOICES = [
+        (1, "Semester 1"),
+        (2, "Semester 2"),
+    ]
+
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name="semesters")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="semesters")
+    year_level = models.IntegerField(choices=YEAR_LEVEL_CHOICES, default=1)
+    semester_number = models.IntegerField(choices=SEMESTER_NUMBER_CHOICES, default=1)
+    name = models.CharField(max_length=100)
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    class Meta:
+        ordering = ["course", "year_level", "semester_number"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["academic_year", "course", "year_level", "semester_number"],
+                name="unique_semester_per_year_course"
+            )
+        ]
+
+    def clean(self):
+        if self.course_id and self.year_level > self.course.course_duration:
+            raise ValidationError({
+                "year_level": (
+                    f"{self.course} is a {self.course.get_course_duration_display()} "
+                    f"course, so it cannot have Year {self.year_level}."
+                )
+            })
+
+    def __str__(self):
+        return f"{self.course} - {self.academic_year} - {self.name}"
+
+
 class Module(models.Model):
     module_name = models.CharField(max_length=100)
     module_code = models.CharField(max_length=10)
     full_marks = models.DecimalField(max_digits=5, decimal_places=2)
-    courses = models.ForeignKey(Course, on_delete=models.CASCADE)
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name="modules")
 
     def __str__(self):
         return self.module_name
@@ -58,6 +116,8 @@ class Result(models.Model):
 
 class Attendance(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE, null=True, blank=True)
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateField()
     STATUS_CHOICES = [
         ("Present", "Present"),

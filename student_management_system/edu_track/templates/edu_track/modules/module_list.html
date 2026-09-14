@@ -24,7 +24,7 @@
           <th>Module Code</th>
           <th>Module Name</th>
           <th>Full Marks</th>
-          <th>Course</th>
+          <th>Semester</th>
           <th>Actions</th>
         </tr>
 
@@ -33,7 +33,7 @@
             <td>{{ module.module_code }}</td>
             <td>{{ module.module_name }}</td>
             <td>{{ module.full_marks }}</td>
-            <td>{{ module.courses.course_name }}</td>
+            <td>{{ module.semester.course.course_name }} - Year {{ module.semester.year_level }} Semester {{ module.semester.semester_number }} ({{ module.semester.academic_year.year_label }})</td>
             <td>
               <a href="{% url 'module_update' module.id %}" class = "btn btn-warning btn-sm">Edit</a>
               

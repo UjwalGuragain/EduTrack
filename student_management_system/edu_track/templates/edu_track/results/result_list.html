@@ -76,21 +76,23 @@
                     <th>Student</th>
                     <th>Module Code</th>
                     <th>Module Name</th>
-                    <th>Obtained Marks</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
+                                <th>Semester</th>
+                                <th>Obtained Marks</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
 
-            <tbody>
+                        <tbody>
 
-                {% for result in results %}
+                            {% for result in results %}
 
-                <tr>
-                    <td>{{ result.id }}</td>
-                    <td>{{ result.student.full_name }}</td>
-                    <td>{{ result.module.module_code }}</td>
-                    <td>{{ result.module.module_name }}</td>
-                    <td>{{ result.obtained_marks }}</td>
+                            <tr>
+                                <td>{{ result.id }}</td>
+                                <td>{{ result.student.full_name }}</td>
+                                <td>{{ result.module.module_code }}</td>
+                                <td>{{ result.module.module_name }}</td>
+                                <td>{{ result.module.semester.course.course_name }} - Year {{ result.module.semester.year_level }} Sem {{ result.module.semester.semester_number }}</td>
+                                <td>{{ result.obtained_marks }}</td>
 
                     <td>
                         <a href="{% url 'result_update' result.id %}"
