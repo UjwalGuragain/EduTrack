@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-chart-pie mr-2"></i>Analytics</h3>
+      </div>
+      <div class="card-body">
+        <p class="mb-0">
+          Overview of academic performance, attendance, and enrollment trends.
+          {% if instructor %}Welcome, <strong>{{ instructor.full_name }}</strong>.{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-info">
+      <div class="inner">
+        <h3>{{ summary.total_results }}</h3>
+        <p>Total Results</p>
+      </div>
+      <div class="icon"><i class="fas fa-clipboard-list"></i></div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-success">
+      <div class="inner">
+        <h3>{{ summary.average_marks }}</h3>
+        <p>Average Marks</p>
+      </div>
+      <div class="icon"><i class="fas fa-percentage"></i></div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-warning">
+      <div class="inner">
+        <h3>{{ summary.highest_marks }}</h3>
+        <p>Highest Marks</p>
+      </div>
+      <div class="icon"><i class="fas fa-arrow-up"></i></div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-danger">
+      <div class="inner">
+        <h3>{{ summary.lowest_marks }}</h3>
+        <p>Lowest Marks</p>
+      </div>
+      <div class="icon"><i class="fas fa-arrow-down"></i></div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card card-info">
+      <div class="card-header">
+        <h3 class="card-title">Grade Distribution</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart">
+          <canvas id="gradeChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card card-info">
+      <div class="card-header">
+        <h3 class="card-title">Attendance Trend (Last 30 Days)</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart">
+          <canvas id="attendanceChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card card-success">
+      <div class="card-header">
+        <h3 class="card-title">Course Enrollments</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart">
+          <canvas id="enrollmentChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card card-success">
+      <div class="card-header">
+        <h3 class="card-title">Enrollments by Month</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart">
+          <canvas id="monthChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card card-warning">
+      <div class="card-header">
+        <h3 class="card-title">Average Score per Course (%)</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart">
+          <canvas id="courseScoreChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card card-warning">
+      <div class="card-header">
+        <h3 class="card-title">Average Score per Module (%)</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart">
+          <canvas id="moduleScoreChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card card-primary">
+      <div class="card-header">
+        <h3 class="card-title">Top Performing Students</h3>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student</th>
+              <th>Enrollment</th>
+              <th>%</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in top_students %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ student.name }}</td>
+              <td>{{ student.enrollment_number }}</td>
+              <td>{{ student.percentage }}</td>
+              <td><span class="badge badge-success">{{ student.grade }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center">No results recorded yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card card-secondary">
+      <div class="card-header">
+        <h3 class="card-title">Students Needing Attention</h3>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student</th>
+              <th>Enrollment</th>
+              <th>%</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in bottom_students %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ student.name }}</td>
+              <td>{{ student.enrollment_number }}</td>
+              <td>{{ student.percentage }}</td>
+              <td><span class="badge badge-danger">{{ student.grade }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center">No results recorded yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'adminlte/plugins/chart.js/Chart.min.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var gradeData = {{ grade_distribution|safe }};
+  var attendanceData = {{ attendance_trend|safe }};
+  var enrollmentData = {{ course_enrollment_counts|safe }};
+  var monthData = {{ enrollment_by_month|safe }};
+  var courseScoreData = {{ course_average_scores|safe }};
+  var moduleScoreData = {{ module_average_scores|safe }};
+
+  var palette = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14'];
+
+  if (gradeData.data.length) {
+    new Chart(document.getElementById('gradeChart'), {
+      type: 'doughnut',
+      data: {
+        labels: gradeData.labels,
+        datasets: [{
+          data: gradeData.data,
+          backgroundColor: palette.slice(0, gradeData.data.length),
+        }]
+      },
+      options: { maintainAspectRatio: false, responsive: true }
+    });
+  }
+
+  if (attendanceData.data.length) {
+    new Chart(document.getElementById('attendanceChart'), {
+      type: 'line',
+      data: {
+        labels: attendanceData.labels,
+        datasets: [{
+          label: 'Present',
+          data: attendanceData.data,
+          borderColor: '#28a745',
+          backgroundColor: 'rgba(40,167,69,0.1)',
+          fill: true,
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        scales: { yAxes: [{ ticks: { beginAtZero: true, stepSize: 1 } }] }
+      }
+    });
+  }
+
+  if (enrollmentData.data.length) {
+    new Chart(document.getElementById('enrollmentChart'), {
+      type: 'bar',
+      data: {
+        labels: enrollmentData.labels,
+        datasets: [{
+          label: 'Students',
+          data: enrollmentData.data,
+          backgroundColor: '#007bff',
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        legend: { display: false },
+        scales: { yAxes: [{ ticks: { beginAtZero: true, stepSize: 1 } }] }
+      }
+    });
+  }
+
+  if (monthData.data.length) {
+    new Chart(document.getElementById('monthChart'), {
+      type: 'bar',
+      data: {
+        labels: monthData.labels,
+        datasets: [{
+          label: 'Enrollments',
+          data: monthData.data,
+          backgroundColor: '#28a745',
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        legend: { display: false },
+        scales: { yAxes: [{ ticks: { beginAtZero: true, stepSize: 1 } }] }
+      }
+    });
+  }
+
+  if (courseScoreData.data.length) {
+    new Chart(document.getElementById('courseScoreChart'), {
+      type: 'horizontalBar',
+      data: {
+        labels: courseScoreData.labels,
+        datasets: [{
+          label: 'Average %',
+          data: courseScoreData.data,
+          backgroundColor: '#ffc107',
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        legend: { display: false },
+        scales: { xAxes: [{ ticks: { beginAtZero: true, max: 100 } }] }
+      }
+    });
+  }
+
+  if (moduleScoreData.data.length) {
+    new Chart(document.getElementById('moduleScoreChart'), {
+      type: 'bar',
+      data: {
+        labels: moduleScoreData.labels,
+        datasets: [{
+          label: 'Average %',
+          data: moduleScoreData.data,
+          backgroundColor: '#17a2b8',
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        legend: { display: false },
+        scales: { yAxes: [{ ticks: { beginAtZero: true, max: 100 } }] }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

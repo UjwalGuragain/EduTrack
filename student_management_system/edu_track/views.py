@@ -16,9 +16,11 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 from django.utils import timezone
 import csv
+import json
+from datetime import date
 from django.http import HttpResponse, HttpResponseNotAllowed
 from .forms import InstructorProfilePictureForm, StudentProfilePictureForm, ResultForm
-from datetime import date
+from . import analytics as analytics_helpers
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
@@ -1365,6 +1367,71 @@ def student_result_pdf(request, id):
     doc.build(elements)
 
     return response
+
+
+# =========================== ANALYTICS ===========================
+
+@instructor_required
+def instructor_analytics(request):
+    """Instructor-facing analytics dashboard with Chart.js charts."""
+    if not hasattr(request.user, "instructor") and not request.user.is_staff:
+        return redirect("login")
+
+    instructor = getattr(request.user, "instructor", None)
+
+    context = {
+        "page_title": "Analytics",
+        "instructor": instructor,
+        "grade_distribution": json.dumps(analytics_helpers.grade_distribution()),
+        "attendance_trend": json.dumps(analytics_helpers.attendance_trend(days=30)),
+        "course_average_scores": json.dumps(analytics_helpers.course_average_scores()),
+        "enrollment_by_month": json.dumps(analytics_helpers.enrollment_by_month()),
+        "course_enrollment_counts": json.dumps(analytics_helpers.course_enrollment_counts()),
+        "module_average_scores": json.dumps(analytics_helpers.module_average_scores()),
+        "summary": analytics_helpers.summary_stats(),
+        "top_students": analytics_helpers.top_performing_students(5),
+        "bottom_students": analytics_helpers.bottom_performing_students(5),
+    }
+    return render(
+        request,
+        "edu_track/dashboards/instructor_analytics.html",
+        context,
+    )
+
+
+@student_required
+def student_analytics(request):
+    """Student-facing analytics dashboard with Chart.js charts."""
+    student = request.user.student
+
+    context = {
+        "student": student,
+        "module_performance": json.dumps(
+            analytics_helpers.student_module_performance(student)
+        ),
+        "grade_distribution": json.dumps(
+            analytics_helpers.grade_distribution(
+                Result.objects.filter(student=student).select_related("module")
+            )
+        ),
+        "attendance_trend": json.dumps(
+            analytics_helpers.attendance_trend(
+                days=30,
+                queryset=Attendance.objects.filter(student=student),
+            )
+        ),
+        "grade_history": json.dumps(
+            analytics_helpers.student_grade_history(student)
+        ),
+        "summary": analytics_helpers.summary_stats(
+            Result.objects.filter(student=student)
+        ),
+    }
+    return render(
+        request,
+        "edu_track/dashboards/student_analytics.html",
+        context,
+    )
 
 
 def error_404(request, exception):

@@ -5,6 +5,7 @@ from django.http import HttpRequest
 from edu_track.models import Instructor, Student, Course, Module, Result, Attendance, AcademicYear, Semester
 from edu_track.serializers import StudentSerializer
 from edu_track import views as edu_views
+from edu_track import analytics as analytics_helpers
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 #Test-1 covering critical bug fixes
@@ -1017,3 +1018,185 @@ class ErrorPageTests(TestCase):
         resp = edu_views.error_500(request)
         self.assertEqual(resp.status_code, 500)
         self.assertContains(resp, "500", status_code=500)
+
+
+#Test-6 covering advanced analytics
+class AdvancedAnalyticsTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        # Instructor
+        self.instructor_user = User.objects.create_user(
+            username="analytics_instructor",
+            password="Password123",
+        )
+        self.instructor = Instructor.objects.create(
+            user=self.instructor_user,
+            full_name="Analytics Prof",
+            contact_number="9800000033",
+            email="analyticsprof@test.com",
+            address="Kathmandu",
+            qualification="PhD",
+        )
+
+        # Student 1 (with results + attendance)
+        self.student_user1 = User.objects.create_user(
+            username="analytics_student1",
+            password="Password123",
+        )
+        self.course = Course.objects.create(
+            course_name="Data Science",
+            course_code="DS101",
+            course_duration=4,
+        )
+        self.academic_year, _ = AcademicYear.objects.get_or_create(
+            year_label="2025/2026",
+            defaults={
+                "start_date": "2025-09-01",
+                "end_date": "2026-08-31",
+            },
+        )
+        self.semester = Semester.objects.create(
+            academic_year=self.academic_year,
+            course=self.course,
+            year_level=1,
+            semester_number=1,
+            name="Semester 1",
+            start_date="2025-09-01",
+            end_date="2026-01-31",
+        )
+        self.module1 = Module.objects.create(
+            module_name="Machine Learning",
+            module_code="DS201",
+            full_marks=100,
+            semester=self.semester,
+        )
+        self.module2 = Module.objects.create(
+            module_name="Statistics",
+            module_code="DS202",
+            full_marks=50,
+            semester=self.semester,
+        )
+        self.student1 = Student.objects.create(
+            user=self.student_user1,
+            full_name="Analytics Alice",
+            address="Lalitpur",
+            contact_number="9811111111",
+            email="analyticsalice@test.com",
+            guardian_name="Guard",
+            enrollment_number="AN001",
+            enrolled_course=self.course,
+            enrollment_date="2026-01-15",
+        )
+        Result.objects.create(
+            student=self.student1,
+            module=self.module1,
+            obtained_marks=95,
+        )
+        Result.objects.create(
+            student=self.student1,
+            module=self.module2,
+            obtained_marks=45,
+        )
+        Attendance.objects.create(
+            student=self.student1,
+            date="2026-03-01",
+            status="Present",
+        )
+
+        # Student 2 (no results/attendance)
+        self.student_user2 = User.objects.create_user(
+            username="analytics_student2",
+            password="Password123",
+        )
+        self.student2 = Student.objects.create(
+            user=self.student_user2,
+            full_name="Analytics Bob",
+            address="Patan",
+            contact_number="9822222222",
+            email="analyticsbob@test.com",
+            guardian_name="Guard",
+            enrollment_number="AN002",
+            enrolled_course=self.course,
+            enrollment_date="2026-02-01",
+        )
+
+    # --- Access control ---
+
+    def test_instructor_can_access_analytics(self):
+        self.client.force_login(self.instructor_user)
+        response = self.client.get("/instructor/analytics/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Analytics")
+
+    def test_student_cannot_access_instructor_analytics(self):
+        self.client.force_login(self.student_user1)
+        response = self.client.get("/instructor/analytics/")
+        self.assertEqual(response.status_code, 403)
+
+    def test_student_can_access_own_analytics(self):
+        self.client.force_login(self.student_user1)
+        response = self.client.get("/student/analytics/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "My Analytics")
+
+    def test_instructor_cannot_access_student_analytics(self):
+        self.client.force_login(self.instructor_user)
+        response = self.client.get("/student/analytics/")
+        # instructor_required decorator raises PermissionDenied -> 403
+        self.assertEqual(response.status_code, 403)
+
+    def test_unauthenticated_redirected_to_login(self):
+        unauth = Client()
+        response = unauth.get("/instructor/analytics/")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login", response.url)
+
+    # --- Analytics helper functions ---
+
+    def test_grade_distribution_counts(self):
+        # 95/100 = 95% -> A+; adjust second result to 40/50 = 80% -> A
+        result2 = Result.objects.get(student=self.student1, module=self.module2)
+        result2.obtained_marks = 40
+        result2.save()
+
+        data = analytics_helpers.grade_distribution(
+            Result.objects.filter(student=self.student1)
+        )
+        self.assertEqual(data["labels"], ["A+", "A"])
+        self.assertEqual(data["data"], [1, 1])
+
+    def test_student_module_performance(self):
+        data = analytics_helpers.student_module_performance(self.student1)
+        self.assertEqual(len(data["labels"]), 2)
+        self.assertEqual(data["obtained"], [95.0, 45.0])
+        self.assertEqual(data["full_marks"], [100.0, 50.0])
+
+    def test_top_and_bottom_performing_students(self):
+        top = analytics_helpers.top_performing_students(5)
+        self.assertEqual(len(top), 1)
+        self.assertEqual(top[0]["name"], "Analytics Alice")
+        bottom = analytics_helpers.bottom_performing_students(5)
+        self.assertEqual(len(bottom), 1)
+
+    def test_summary_stats(self):
+        stats = analytics_helpers.summary_stats()
+        self.assertEqual(stats["total_results"], 2)
+        self.assertEqual(stats["highest_marks"], 95.0)
+        self.assertEqual(stats["lowest_marks"], 45.0)
+
+    def test_analytics_view_context_keys(self):
+        self.client.force_login(self.instructor_user)
+        response = self.client.get("/instructor/analytics/")
+        for key in [
+            "grade_distribution",
+            "attendance_trend",
+            "course_average_scores",
+            "enrollment_by_month",
+            "course_enrollment_counts",
+            "module_average_scores",
+            "summary",
+            "top_students",
+            "bottom_students",
+        ]:
+            self.assertIn(key, response.context)
