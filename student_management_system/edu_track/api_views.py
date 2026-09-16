@@ -7,7 +7,9 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from rest_framework import generics, mixins
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from . import analytics as analytics_helpers
 from .permissions import (
     IsAdminOrInstructorReadOnly,
     IsAdminOrInstructorWrite,
@@ -15,6 +17,7 @@ from .permissions import (
     IsAttendanceStudentOwnerOrReadOnly,
     IsResultStudentOwnerOrReadOnly,
     IsStudentOwnerOrReadOnly,
+    IsStudentUser,
 )
 
 #API VIEWS
@@ -78,3 +81,47 @@ class ResultViewSet(ModelViewSet):
         if hasattr(user, "student") and not user.is_staff and not hasattr(user, "instructor"):
             return Result.objects.filter(student=user.student)
         return super().get_queryset()
+
+
+class InstructorAnalyticsAPIView(APIView):
+    """Read-only aggregate analytics for instructors and admin users."""
+
+    permission_classes = [IsAuthenticated, IsAdminOrInstructorReadOnly]
+
+    def get(self, request):
+        return Response({
+            "scope": "instructor",
+            "summary": analytics_helpers.summary_stats(),
+            "grade_distribution": analytics_helpers.grade_distribution(),
+            "attendance_trend": analytics_helpers.attendance_trend(days=30),
+            "course_average_scores": analytics_helpers.course_average_scores(),
+            "enrollment_by_month": analytics_helpers.enrollment_by_month(),
+            "course_enrollment_counts": analytics_helpers.course_enrollment_counts(),
+            "module_average_scores": analytics_helpers.module_average_scores(),
+            "top_students": analytics_helpers.top_performing_students(5),
+            "bottom_students": analytics_helpers.bottom_performing_students(5),
+        })
+
+
+class StudentAnalyticsAPIView(APIView):
+    """Read-only analytics restricted to the authenticated student."""
+
+    permission_classes = [IsAuthenticated, IsStudentUser]
+
+    def get(self, request):
+        student = request.user.student
+        result_queryset = Result.objects.filter(student=student).select_related("module")
+        attendance_queryset = Attendance.objects.filter(student=student)
+
+        return Response({
+            "scope": "student",
+            "student_id": student.id,
+            "summary": analytics_helpers.summary_stats(result_queryset),
+            "module_performance": analytics_helpers.student_module_performance(student),
+            "grade_distribution": analytics_helpers.grade_distribution(result_queryset),
+            "attendance_trend": analytics_helpers.attendance_trend(
+                days=30,
+                queryset=attendance_queryset,
+            ),
+            "grade_history": analytics_helpers.student_grade_history(student),
+        })

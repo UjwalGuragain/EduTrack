@@ -460,6 +460,8 @@ class APIPermissionTests(TestCase):
             "/api/v1/modules/",
             "/api/v1/attendances/",
             "/api/v1/results/",
+            "/api/v1/analytics/instructor/",
+            "/api/v1/analytics/student/",
         ]:
             resp = unauth.get(url)
             self.assertIn(
@@ -658,6 +660,56 @@ class APIPermissionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.student1.refresh_from_db()
         self.assertEqual(self.student1.full_name, "Updated API Alice")
+
+    def test_instructor_analytics_api_returns_dashboard_data(self):
+        self.client.force_login(self.instructor_user)
+        response = self.client.get("/api/v1/analytics/instructor/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["scope"], "instructor")
+        self.assertEqual(data["summary"]["total_results"], 1)
+        self.assertIn("grade_distribution", data)
+        self.assertIn("attendance_trend", data)
+        self.assertIn("course_average_scores", data)
+        self.assertIn("top_students", data)
+        self.assertEqual(data["top_students"][0]["name"], "API Alice")
+
+    def test_student_analytics_api_is_scoped_to_authenticated_student(self):
+        self.client.force_login(self.student_user1)
+        response = self.client.get("/api/v1/analytics/student/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["scope"], "student")
+        self.assertEqual(data["student_id"], self.student1.id)
+        self.assertEqual(data["summary"]["total_results"], 1)
+        self.assertEqual(len(data["module_performance"]["labels"]), 1)
+
+    def test_student_analytics_api_does_not_fall_back_to_global_results(self):
+        self.client.force_login(self.student_user2)
+        response = self.client.get("/api/v1/analytics/student/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["student_id"], self.student2.id)
+        self.assertEqual(data["summary"]["total_results"], 0)
+        self.assertEqual(data["module_performance"]["labels"], [])
+        self.assertEqual(data["grade_distribution"]["data"], [])
+
+    def test_analytics_api_permissions_are_role_specific(self):
+        self.client.force_login(self.student_user1)
+        instructor_response = self.client.get("/api/v1/analytics/instructor/")
+        self.assertEqual(instructor_response.status_code, 403)
+
+        self.client.force_login(self.instructor_user)
+        student_response = self.client.get("/api/v1/analytics/student/")
+        self.assertEqual(student_response.status_code, 403)
+
+    def test_analytics_api_is_read_only(self):
+        self.client.force_login(self.instructor_user)
+        response = self.client.post("/api/v1/analytics/instructor/", {})
+        self.assertEqual(response.status_code, 403)
 
 #Test-3 covering instructor CRUD workflow
 class InstructorCRUDTests(TestCase):
@@ -1171,6 +1223,11 @@ class AdvancedAnalyticsTests(TestCase):
         self.assertEqual(len(data["labels"]), 2)
         self.assertEqual(data["obtained"], [95.0, 45.0])
         self.assertEqual(data["full_marks"], [100.0, 50.0])
+
+    def test_student_grade_history_returns_numeric_chart_values(self):
+        data = analytics_helpers.student_grade_history(self.student1)
+        self.assertEqual(data["percentages"], [95.0, 90.0])
+        self.assertEqual(data["grades"], ["A+", "A+"])
 
     def test_top_and_bottom_performing_students(self):
         top = analytics_helpers.top_performing_students(5)

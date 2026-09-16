@@ -5,14 +5,13 @@ Pure functions that compute Chart.js-friendly data structures
 computation logic is easy to unit-test and reuse.
 """
 
-from collections import OrderedDict
-from datetime import timedelta
+from datetime import date, timedelta
+from collections import Counter
 
 from django.db.models import Avg, Count, Max, Min, Sum
-from django.db.models.functions import TruncDate, TruncMonth
 from django.utils import timezone
 
-from .models import Attendance, Course, Module, Result, Student
+from .models import Attendance, Result, Student
 
 # Grade buckets in the same order as grade_for_percentage thresholds.
 GRADE_ORDER = ["A+", "A", "B+", "B", "C", "D", "F"]
@@ -48,7 +47,11 @@ def grade_distribution(queryset=None):
     Accepts an optional Result queryset (e.g. scoped to a student) and
     falls back to all results. Returns {'labels': [...], 'data': [...]}.
     """
-    results = queryset or Result.objects.select_related("module").all()
+    results = (
+        Result.objects.select_related("module").all()
+        if queryset is None
+        else queryset
+    )
     counts = {grade: 0 for grade in GRADE_ORDER}
 
     for result in results:
@@ -70,15 +73,13 @@ def attendance_trend(days=30, queryset=None):
     end_date = timezone.now().date()
     start_date = end_date - timedelta(days=days - 1)
 
-    attendance = queryset or Attendance.objects.all()
-    day_counts = (
-        attendance.filter(date__gte=start_date, date__lte=end_date, status="Present")
-        .annotate(day=TruncDate("date"))
-        .values("day")
-        .annotate(count=Count("id"))
-        .order_by("day")
-    )
-    count_map = {item["day"]: item["count"] for item in day_counts}
+    attendance = Attendance.objects.all() if queryset is None else queryset
+    dates = attendance.filter(
+        date__gte=start_date,
+        date__lte=end_date,
+        status="Present",
+    ).values_list("date", flat=True)
+    count_map = Counter(dates)
 
     labels = []
     data = []
@@ -124,14 +125,17 @@ def enrollment_by_month():
 
     Returns {'labels': ['Jan 2026', ...], 'data': [...]}.
     """
-    months = (
-        Student.objects.annotate(month=TruncMonth("enrollment_date"))
-        .values("month")
-        .annotate(count=Count("id"))
-        .order_by("month")
+    enrollment_dates = Student.objects.values_list("enrollment_date", flat=True)
+    month_counts = Counter(
+        (enrollment_date.year, enrollment_date.month)
+        for enrollment_date in enrollment_dates
+        if enrollment_date
     )
-    labels = [item["month"].strftime("%b %Y") for item in months if item["month"]]
-    data = [item["count"] for item in months if item["month"]]
+    labels = [
+        date(year, month, 1).strftime("%b %Y")
+        for year, month in sorted(month_counts)
+    ]
+    data = [month_counts[month] for month in sorted(month_counts)]
     return {"labels": labels, "data": data}
 
 
@@ -192,15 +196,20 @@ def student_module_performance(student):
 
 
 def student_grade_history(student):
-    """A student's grade per module, ordered by module name."""
+    """A student's percentage and letter grade per module."""
     results = (
         Result.objects.filter(student=student)
         .select_related("module")
         .order_by("module__module_name")
     )
     labels = [result.module.module_name for result in results]
-    grades = [grade_for_percentage(result_percentage_for(result)) for result in results]
-    return {"labels": labels, "grades": grades}
+    percentages = [result_percentage_for(result) for result in results]
+    grades = [grade_for_percentage(percentage) for percentage in percentages]
+    return {
+        "labels": labels,
+        "percentages": percentages,
+        "grades": grades,
+    }
 
 
 def top_performing_students(limit=5):
@@ -249,7 +258,7 @@ def attendance_percentage_for(attendance_queryset):
 
 def summary_stats(queryset=None):
     """A handful of high-level aggregations for the analytics header cards."""
-    results = queryset or Result.objects.all()
+    results = Result.objects.all() if queryset is None else queryset
     stats = results.aggregate(
         total=Count("id"),
         average=Avg("obtained_marks"),

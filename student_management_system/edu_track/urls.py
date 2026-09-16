@@ -18,6 +18,8 @@ router.register("results", ResultViewSet)
 
 urlpatterns = [
 path("api/v1/", include(router.urls)),
+path("api/v1/analytics/instructor/", InstructorAnalyticsAPIView.as_view(), name="instructor_analytics_api"),
+path("api/v1/analytics/student/", StudentAnalyticsAPIView.as_view(), name="student_analytics_api"),
     #Website
 path("", views.user_login, name = "login"),
 path("login/", views.user_login, name = "login"),

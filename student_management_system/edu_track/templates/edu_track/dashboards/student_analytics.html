@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
         labels: gradeHistoryData.labels,
         datasets: [{
           label: 'Grade',
-          data: gradeHistoryData.grades,
+          data: gradeHistoryData.percentages,
           borderColor: '#ffc107',
           backgroundColor: 'rgba(255,193,7,0.1)',
           fill: true,
@@ -204,7 +204,21 @@ document.addEventListener('DOMContentLoaded', function () {
         maintainAspectRatio: false,
         responsive: true,
         legend: { display: false },
-        scales: { yAxes: [{ ticks: { beginAtZero: true, max: 4 } }] }
+        scales: {
+          yAxes: [{
+            ticks: { beginAtZero: true, max: 100, stepSize: 20 },
+            scaleLabel: { display: true, labelString: 'Percentage' }
+          }]
+        },
+        tooltips: {
+          callbacks: {
+            label: function (tooltipItem, data) {
+              var index = tooltipItem.index;
+              var grade = gradeHistoryData.grades[index];
+              return data.datasets[0].label + ': ' + tooltipItem.yLabel + '% (' + grade + ')';
+            }
+          }
+        }
       }
     });
   }
