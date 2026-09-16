@@ -1,6 +1,6 @@
 # 🎓 EduTrack
 
-**EduTrack** is a role-based education management system designed to make student, teacher, and academic data easier to manage, access, and secure.
+**EduTrack** is a role-based education management system designed to make student, instructor, and academic data easier to manage, access, and secure.
 
 The project focuses on building a structured backend where users can perform actions based on **who they are, what they are requesting, and whether they have permission to perform that action**.
 
@@ -14,7 +14,7 @@ EduTrack is being developed with a strong focus on:
 * 🛡️ Authorization and access control
 * 👥 Role-based permissions
 * 🎓 Student management
-* 👨‍🏫 Teacher management
+* 👨‍🏫 Instructor management
 * 📚 Academic data management
 * 📊 Structured data access
 * 🔒 Protecting users from accessing data they are not permitted to see
@@ -27,7 +27,7 @@ and
 
 > **Authorization:** What is this user allowed to do?
 
-For example, knowing that a user is a teacher does not automatically mean that the teacher can access every student or every piece of student information. EduTrack is designed to enforce permissions at the appropriate level.
+For example, knowing that a user is an instructor does not automatically mean that the instructor can access every protected operation. EduTrack is designed to enforce permissions at the appropriate level.
 
 ---
 
@@ -72,7 +72,7 @@ EduTrack follows a simple authorization flow:
 This helps prevent authorization from becoming a simple:
 
 ```text
-if user.role == "teacher":
+if user.role == "instructor":
     allow()
 ```
 
@@ -103,9 +103,9 @@ Authorization answers:
 Examples:
 
 * Can a student view their own profile?
-* Can a teacher view students assigned to them?
+* Can an instructor manage student records?
 * Can an administrator view all students?
-* Can a teacher modify student grades?
+* Can an instructor modify student grades?
 * Can a student modify their own academic records?
 
 EduTrack treats these as separate concerns.
@@ -119,10 +119,11 @@ The system is designed around different user roles.
 | Role          | Example Responsibilities                       |
 | ------------- | ---------------------------------------------- |
 | 👑 Admin      | Manage and oversee the system                  |
-| 👨‍🏫 Teacher | Manage or access assigned academic information |
+| 👨‍🏫 Instructor | Manage student and academic information |
 | 🎓 Student    | Access their own permitted information         |
 
-The exact permissions for each role can evolve as the system develops.
+The current permissions are defined by the application's decorators, API
+permission classes, and object-level ownership checks.
 
 ---
 
@@ -225,15 +226,16 @@ For every request, the system should be able to answer:
 
 A simplified example:
 
-| Action                         | Student     | Teacher               | Admin                 |
-| ------------------------------ | ----------- | --------------------- | --------------------- |
-| View own profile               | ✅           | ✅                     | ✅                     |
-| View another student's profile | ❌           | Depends on scope      | ✅                     |
-| View student list              | ❌ / Limited | Assigned students     | ✅                     |
-| Modify own academic records    | ❌           | ❌                     | Depends on permission |
-| Modify student records         | ❌           | Depends on permission | ✅                     |
+| Action                          | Student | Instructor | Admin/staff |
+| ------------------------------- | ------- | ---------- | ----------- |
+| View own profile                | ✅      | ✅         | ✅          |
+| View another student's profile  | ❌      | ✅         | ✅          |
+| View student list               | ❌      | ✅         | ✅          |
+| Modify own academic records     | ❌      | ❌         | ✅          |
+| Modify student records          | ❌      | ✅         | ✅          |
+| Download attendance/result PDFs | ❌      | ✅         | ✅          |
 
-These permissions are examples and may change as EduTrack evolves.
+These are the current application permissions.
 
 ---
 
@@ -255,19 +257,22 @@ from rest_framework.viewsets import ModelViewSet
 class StudentViewSet(ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [
+        IsAdminOrStudentReadOnly,
+        IsStudentOwnerOrReadOnly,
+    ]
 ```
 
 This allows the API to support common operations such as:
 
 | HTTP Method | Operation           | Example                      |
 | ----------- | ------------------- | ---------------------------- |
-| `GET`       | List resources      | `GET /api/students/`         |
-| `GET`       | Retrieve a resource | `GET /api/students/{id}/`    |
-| `POST`      | Create a resource   | `POST /api/students/`        |
-| `PUT`       | Update a resource   | `PUT /api/students/{id}/`    |
-| `PATCH`     | Partially update    | `PATCH /api/students/{id}/`  |
-| `DELETE`    | Delete a resource   | `DELETE /api/students/{id}/` |
+| `GET`       | List resources      | `GET /api/v1/students/`         |
+| `GET`       | Retrieve a resource | `GET /api/v1/students/{id}/`    |
+| `POST`      | Create a resource   | `POST /api/v1/students/`        |
+| `PUT`       | Update a resource   | `PUT /api/v1/students/{id}/`    |
+| `PATCH`     | Partially update    | `PATCH /api/v1/students/{id}/`  |
+| `DELETE`    | Delete a resource   | `DELETE /api/v1/students/{id}/` |
 
 ### 🔗 API Routing
 
@@ -287,8 +292,8 @@ urlpatterns = router.urls
 This produces endpoints such as:
 
 ```text
-/api/students/
-/api/students/{id}/
+/api/v1/students/
+/api/v1/students/{id}/
 ```
 
 The use of routers reduces repetitive URL configuration and keeps API routing consistent across resources.
@@ -350,7 +355,10 @@ For example:
 class StudentViewSet(ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [
+        IsAdminOrStudentReadOnly,
+        IsStudentOwnerOrReadOnly,
+    ]
 ```
 
 For more complex requirements, EduTrack can use custom permission classes.
@@ -363,10 +371,10 @@ Student
    ├── Can view own information
    └── Cannot access another student's information
 
-Teacher
+Instructor
    │
-   ├── Can access assigned students
-   └── Cannot access unrelated student records
+   ├── Can manage student records
+   └── Cannot manage instructor records
 
 Admin
    │
@@ -384,7 +392,7 @@ ModelViewSets provide endpoints for individual objects, making object-level auth
 For example:
 
 ```text
-GET /api/students/15/
+GET /api/v1/students/15/
 ```
 
 The API should not only ask:
@@ -410,13 +418,13 @@ Authorization is also required for list endpoints.
 For example:
 
 ```text
-GET /api/students/
+GET /api/v1/students/
 ```
 
 is different from:
 
 ```text
-GET /api/students/15/
+GET /api/v1/students/15/
 ```
 
 The first request asks for a **collection of students**, while the second requests a **specific student**.
@@ -442,7 +450,7 @@ The ModelViewSet approach provides a consistent CRUD interface across EduTrack r
                        │
           ┌────────────┼────────────┐
           ▼            ▼            ▼
-       Students     Teachers     Other Models
+       Students     Instructors  Other Models
           │            │            │
           ▼            ▼            ▼
        ViewSet       ViewSet       ViewSet
@@ -472,19 +480,19 @@ REST API endpoints should be tested for both **functionality and security**.
 Examples include:
 
 ```text
-GET /api/students/
+GET /api/v1/students/
     ├── Authenticated user       → expected response
     └── Unauthenticated user     → denied
 
-GET /api/students/15/
+GET /api/v1/students/15/
     ├── Authorized user          → expected response
     └── Unauthorized user        → denied
 
-POST /api/students/
+POST /api/v1/students/
     ├── User with create access  → allowed
     └── User without create access → denied
 
-PATCH /api/students/15/
+PATCH /api/v1/students/15/
     ├── Authorized user          → allowed
     └── Unauthorized user        → denied
 ```
@@ -523,12 +531,14 @@ EDUTRACK/
 │   │   ├── templates/
 │   │   ├── __init__.py
 │   │   ├── admin.py
+│   │   ├── analytics.py
 │   │   ├── api_views.py
 │   │   ├── apps.py
 │   │   ├── context_processors.py
 │   │   ├── decorators.py
 │   │   ├── forms.py
 │   │   ├── models.py
+│   │   ├── permissions.py
 │   │   ├── serializers.py
 │   │   ├── tests.py
 │   │   ├── urls.py
@@ -538,6 +548,7 @@ EDUTRACK/
 │   │   ├── __init__.py
 │   │   ├── asgi.py
 │   │   ├── settings.py
+│   │   ├── settings_production.py
 │   │   ├── urls.py
 │   │   └── wsgi.py
 │   ├── db.sqlite3
@@ -548,6 +559,93 @@ EDUTRACK/
 ```
 
 The exact structure may change as development continues.
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.10+
+- pip
+- virtual environment support
+
+### Setup
+
+```bash
+# clone the project
+git clone https://github.com/UjwalGuragain/EduTrack.git
+cd EduTrack
+
+# create a virtual environment
+python -m venv myenv
+
+# activate it
+# Windows
+myenv\Scripts\activate
+# macOS/Linux
+source myenv/bin/activate
+
+# install dependencies
+pip install -r requirements.txt
+```
+
+### Database + app startup
+
+```bash
+cd student_management_system
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+Then open:
+
+- http://127.0.0.1:8000/
+- Admin panel: http://127.0.0.1:8000/admin/
+
+### Environment variables
+
+Create a `.env` file in the project root if you plan to use email-based password reset features:
+
+```env
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
+```
+
+---
+
+## 🔌 API Overview
+
+The project exposes a DRF router under `/api/v1/`.
+
+Available endpoints:
+
+- `/api/v1/students/`
+- `/api/v1/instructors/`
+- `/api/v1/courses/`
+- `/api/v1/academic-years/`
+- `/api/v1/semesters/`
+- `/api/v1/modules/`
+- `/api/v1/attendances/`
+- `/api/v1/results/`
+- `/api/v1/analytics/instructor/`
+- `/api/v1/analytics/student/`
+
+Authorization expectations:
+
+- Unauthenticated users are denied access
+- Students can read only their own student, attendance, and result records
+- Instructors can CRUD students, courses, modules, attendance, and results
+- Instructors can view instructors and edit only their own instructor profile
+- Admin/staff users can CRUD all protected resources, including instructors
+- Attendance and result PDF exports are restricted to instructors and admin/staff
+- Result marks are validated against the module full marks (no negative or over-limit values)
+- A student can have at most one result per module (duplicate rows are rejected)
+- A result must use a module from the student's enrolled course
+- Instructor analytics are available to instructors and admin/staff users
+- Student analytics are restricted to the authenticated student's own records
+- Analytics endpoints are read-only and return chart-ready aggregate data
 
 ---
 
@@ -562,13 +660,51 @@ Examples:
 ```text
 Student can access their own data        → PASS
 Student accesses another student's data → DENY
-Teacher accesses assigned students      → PASS
-Teacher accesses unauthorized students  → DENY
+Instructor manages student records      → PASS
 Admin accesses permitted resources      → PASS
 Unauthorized collection access          → DENY
 ```
 
 Authorization tests are especially important because a system can appear to work correctly while still exposing data through an overlooked endpoint or query.
+
+The current Django suite contains 60 tests covering role-based access,
+object-level permissions, report restrictions, grading behavior, result
+validation rules, error pages, safe web CRUD workflows, and advanced
+analytics access and calculations.
+
+---
+
+## 📈 Advanced Analytics
+
+EduTrack includes role-specific analytics dashboards powered by the Chart.js
+library bundled with AdminLTE.
+
+### Instructor analytics
+
+Available at `/instructor/analytics/` for instructors and admin/staff users:
+
+* Grade distribution
+* Attendance trend for the last 30 days
+* Student enrollment by course
+* Enrollment totals by month
+* Average score by course
+* Average score by module
+* Top-performing students
+* Students needing academic attention
+
+### Student analytics
+
+Available at `/student/analytics/` for authenticated students:
+
+* Module scores compared with full marks
+* Personal grade distribution
+* Personal attendance trend for the last 30 days
+* Grade history by module
+* Summary statistics for the student's own results
+
+Analytics are calculated server-side in `edu_track/analytics.py`. Student
+analytics are scoped to the authenticated student's records, while instructor
+analytics use the available academic data for the institution.
 
 ---
 
@@ -583,6 +719,7 @@ EduTrack aims to follow these principles:
 * **Collection-level authorization** — list endpoints must also be protected.
 * **Separation of concerns** — authentication and authorization should remain distinct.
 * **Test permissions** — access-control rules should be covered by automated tests.
+* **Safe mutations** — web deletion actions use CSRF-protected POST requests.
 
 ---
 
@@ -590,7 +727,8 @@ EduTrack aims to follow these principles:
 
 **EduTrack is currently under active development.**
 
-The project is being developed incrementally, with the current focus on understanding and implementing a solid authentication and authorization architecture before expanding into additional features.
+The core management, authorization, reporting, grading, semester
+tracking, and analytics workflows are implemented.
 
 ### Current Focus
 
@@ -599,12 +737,14 @@ The project is being developed incrementally, with the current focus on understa
 * [x] Understand role-based access control
 * [x] Understand object-level permissions
 * [x] Understand collection-level permissions
-* [ ] Implement permission architecture
-* [ ] Add comprehensive authorization tests
-* [ ] Expand student management
-* [ ] Expand teacher management
-* [ ] Add academic features
-* [ ] Improve documentation
+* [x] Implement permission architecture
+* [x] Add comprehensive authorization tests
+* [x] Expand student management
+* [x] Expand instructor management
+* [x] Add academic grading and report features
+* [x] Improve documentation
+* [x] Add semester tracking
+* [x] Add advanced analytics
 
 ---
 
@@ -630,15 +770,56 @@ Useful Education Features
 
 ## 🤝 Contributing
 
-EduTrack is currently a learning and development project.
+Contributions are welcome.
 
-As the project grows, contribution guidelines will be added here.
+### How to contribute
+
+1. Fork the repository.
+2. Create a feature branch:
+   ```bash
+   git checkout -b feature/my-improvement
+   ```
+3. Make your changes and keep them focused.
+4. Add or update tests for any behavior change.
+5. Run the project test suite and confirm it passes.
+6. Open a pull request with a clear description of the change.
+
+### Coding guidelines
+
+- Follow the current Django project structure and app conventions.
+- Keep authorization checks explicit and test-covered.
+- Prefer small, reviewable commits.
+- Update the documentation when behavior changes.
 
 ---
 
 ## 📄 License
 
-License information will be added as the project develops.
+This project is licensed under the MIT License.
+
+```text
+MIT License
+
+Copyright (c) 2026 Ujwal Guragain
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ---
 
